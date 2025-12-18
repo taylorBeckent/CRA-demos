@@ -88,7 +88,7 @@ const DragMock = () => {
                 'drag-over-before',
                 'drag-over-after'
             );
-            console.log(targetItem);
+            // console.log(targetItem);
             if (targetItem && e.currentTarget.dataset.id != targetItem.item.id) {
                 setTargetItem(null);
                 setInsertPosition(null);
@@ -99,6 +99,10 @@ const DragMock = () => {
 
     const handleDrop = useCallback((e, item) => {
         e.preventDefault();
+
+        // if(!draggingItem || ){}
+
+        //. 交换
         if (draggingItem && draggingItem.item.id != item.id) {
             const newItems = [ ...dataList ];
             const fromIndex = newItems.findIndex(i => i.id === draggingItem.item.id);
@@ -106,6 +110,8 @@ const DragMock = () => {
             let newList = swapArrayData(newItems, fromIndex, toIndex);
             setDataList(newList);
         }
+
+        // const dragData = J
 
         e.currentTarget.classList.remove('drag-over');
         setIsDragging(false);
