@@ -1,24 +1,38 @@
-import logo from './logo.svg';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { Suspense } from 'react';
+import routes from './routes';
 import './App.css';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+      <Router>
+        <div className="App">
+          {/* 导航栏 */}
+          {/*<nav>*/}
+          {/*  <ul>*/}
+          {/*    <li><Link to="/">首页</Link></li>*/}
+          {/*    <li><Link to="/about">关于</Link></li>*/}
+          {/*    <li><Link to="/contact">联系</Link></li>*/}
+          {/*    <li><Link to="/user/123">用户123</Link></li>*/}
+          {/*  </ul>*/}
+          {/*</nav>*/}
+
+          {/* 路由内容 */}
+          <Suspense fallback={<div>加载中...</div>}>
+            <Routes>
+              {routes.map((route, index) => (
+                  <Route
+                      key={index}
+                      path={route.path}
+                      element={route.element}
+                      exact={route.exact}
+                  />
+              ))}
+            </Routes>
+          </Suspense>
+        </div>
+      </Router>
   );
 }
 

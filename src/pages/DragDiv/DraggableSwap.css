@@ -1,0 +1,329 @@
+/* DraggableSwap.css */
+.draggable-swap-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 24px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 16px;
+}
+
+.description {
+    text-align: center;
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 32px;
+}
+
+.implementation-section {
+    margin-bottom: 40px;
+    padding: 24px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.implementation-section h3 {
+    color: #2c3e50;
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
+.implementation-section p {
+    color: #6c757d;
+    margin-bottom: 20px;
+}
+
+.items-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 20px;
+    min-height: 120px;
+    padding: 16px;
+    background: white;
+    border-radius: 8px;
+    border: 2px dashed #dee2e6;
+    transition: border-color 0.3s;
+}
+
+.items-container:hover {
+    border-color: #adb5bd;
+}
+
+.draggable-item {
+    flex: 0 0 calc(50% - 8px);
+    min-height: 80px;
+    padding: 16px;
+    border-radius: 8px;
+    cursor: move;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.draggable-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.draggable-item.mouse-draggable {
+    cursor: grab;
+}
+
+.draggable-item.mouse-draggable:active {
+    cursor: grabbing;
+}
+
+.draggable-item.drag-api-draggable {
+    cursor: grab;
+}
+
+.item-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.item-index {
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #333;
+    font-size: 14px;
+}
+
+.item-text {
+    font-weight: 500;
+    color: white;
+    font-size: 16px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.item-hint {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.9);
+    opacity: 0.8;
+    transition: opacity 0.3s;
+}
+
+.draggable-item:hover .item-hint {
+    opacity: 1;
+}
+
+/* 拖拽状态样式 */
+.dragging-clone {
+    pointer-events: none;
+    z-index: 1000;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+    50% { box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+    100% { box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+}
+
+.dragging {
+    opacity: 0.3 !important;
+    transform: scale(0.95);
+}
+
+.drag-over {
+    animation: highlight 0.6s ease-out;
+    border: 2px dashed white !important;
+    box-shadow: 0 0 0 2px #4ECDC4 !important;
+}
+
+@keyframes highlight {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* 状态显示 */
+.drag-status {
+    background: #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 24px 0;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    background: white;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.status-item:last-child {
+    margin-bottom: 0;
+}
+
+.status-label {
+    font-weight: 600;
+    color: #495057;
+    min-width: 140px;
+}
+
+.status-value {
+    color: #212529;
+    font-weight: 500;
+}
+
+/* 原理说明 */
+.implementation-explanation {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 40px;
+}
+
+.implementation-explanation h3 {
+    color: #2c3e50;
+    margin-top: 0;
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.principle-card {
+    background: white;
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.principle-card h4 {
+    color: #4ECDC4;
+    margin-top: 0;
+    margin-bottom: 16px;
+    border-bottom: 2px solid #4ECDC4;
+    padding-bottom: 8px;
+}
+
+.principle-card ol {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.principle-card li {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.principle-card li:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.principle-card strong {
+    color: #2c3e50;
+    display: block;
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+.principle-card p {
+    color: #6c757d;
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+.principle-card code {
+    display: block;
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    color: #e83e8c;
+    border-left: 3px solid #4ECDC4;
+    white-space: pre-wrap;
+    margin-top: 8px;
+}
+
+/* 对比表格 */
+.comparison-table {
+    background: white;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.comparison-table h4 {
+    color: #FF6B6B;
+    margin-top: 0;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.comparison-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.comparison-table th {
+    background: #f8f9fa;
+    padding: 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.comparison-table td {
+    padding: 16px;
+    border-bottom: 1px solid #e9ecef;
+    color: #6c757d;
+}
+
+.comparison-table tr:hover {
+    background: #f8f9fa;
+}
+
+.comparison-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .draggable-item {
+        flex: 0 0 100%;
+    }
+
+    .principle-card code {
+        font-size: 12px;
+        padding: 8px;
+    }
+
+    .status-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .status-label {
+        min-width: auto;
+        margin-bottom: 4px;
+    }
+}

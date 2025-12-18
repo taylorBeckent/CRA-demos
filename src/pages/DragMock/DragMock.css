@@ -1,0 +1,147 @@
+.drag-mock {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 24px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.items-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 20px;
+    min-height: 120px;
+    padding: 16px;
+    background: white;
+    border-radius: 8px;
+    border: 2px dashed #dee2e6;
+    transition: border-color 0.3s;
+}
+
+.items-container:hover {
+    border-color: #adb5bd;
+}
+
+.draggable-item {
+    flex: 0 0 calc(50% - 8px);
+    min-height: 40px;
+    padding: 16px;
+    border-radius: 8px;
+    cursor: move;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.draggable-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px ;
+    opacity: 1;
+}
+
+.draggable-item.drag-api-draggable {
+    cursor: grab;
+}
+
+.item-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.item-index {
+    width: 32px;
+    height: 32px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #333;
+    font-size: 14px;
+}
+
+.item-text {
+    font-weight: 500;
+    color: white;
+    font-size: 16px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/*@keyframes pulse {*/
+/*    0% { box-shadow: 0 8px 24px rgba(0,0,0,0.2); }*/
+/*    50% { box-shadow: 0 8px 32px rgba(0,0,0,0.3); }*/
+/*    100% { box-shadow: 0 8px 24px rgba(0,0,0,0.2); }*/
+/*}*/
+
+.dragging {
+    opacity: 0.3 !important;
+    transform: scale(0.95);
+}
+
+.drag-over {
+    animation: highlight 0.6s ease-out;
+    border: 2px dashed white !important;
+    box-shadow: 0 0 0 2px #4ECDC4 !important;
+}
+
+@keyframes highlight {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.drag-over-before::before,
+.drag-over-after::after {
+    content: '';
+    position: absolute;
+    left: 10%;
+    right: 10%;
+    height: 4px;
+    border-radius: 2px;
+    z-index: 100;
+    background: linear-gradient(0deg,
+    transparent 0%,
+    #4cc9f0 20%,
+    #4361ee 50%,
+    #4cc9f0 80%,
+    transparent 100%);
+    box-shadow: 0 0 15px rgba(76, 97, 238, 0.8);
+    animation: linePulse 1.2s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.drag-over-before::before {
+    top: -10px;
+}
+
+.drag-over-after::after {
+    bottom: -10px;
+}
+
+@keyframes linePulse {
+    0%, 100% {
+        opacity: 0.7;
+        transform: scaleX(0.9);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scaleX(1);
+    }
+}
+
+.drag-over-before {
+    margin-top: 24px !important;
+}
+
+.drag-over-after {
+    margin-bottom: 24px !important;
+}
