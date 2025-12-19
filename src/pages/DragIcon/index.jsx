@@ -1,319 +1,288 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './DragIconComponent.css';
+import { DragOutlined } from '@ant-design/icons';
 
-const DragIconComponent = () => {
-    const [position, setPosition] = useState({ x: 100, y: 100 });
-    const [isHovered, setIsHovered] = useState(false);
-    const [isDragging, setIsDragging] = useState(false);
-    const [isIconDragging, setIsIconDragging] = useState(false);
-    const [showIcon, setShowIcon] = useState(false);
+const INITIAL_ITEMS = [
+    { id: 'item-1', content: '完成项目需求分析', isSelected: false },
+    { id: 'item-2', content: '设计UI原型图', isSelected: false },
+    { id: 'item-3', content: '前端页面开发', isSelected: false },
+    { id: 'item-4', content: '后端API联调', isSelected: false },
+    { id: 'item-5', content: '测试与发布上线', isSelected: false },
+];
 
+/**
+ * 实时拖拽排序组件
+ */
+const DragMockInsert = () => {
+    const [items, setItems] = useState([]);
+    const [draggingId, setDraggingId] = useState(null);
+    const [dragOverId, setDragOverId] = useState(null);
+    const [dragPosition, setDragPosition] = useState(null); // 'before' | 'after'
+
+    const dragItemRef = useRef(null);
     const containerRef = useRef(null);
-    const dragIconRef = useRef(null);
-    const dragStartPos = useRef({ x: 0, y: 0 });
-    const containerStartPos = useRef({ x: 0, y: 0 });
+    const lastUpdatedTime = useRef(0);
+    const THROTTLE_DELAY = 50; // 节流延迟，防止过于频繁更新
 
-    // 鼠标移入显示图标（延迟显示，防止误触）
     useEffect(() => {
-        let timeoutId;
+        setItems(INITIAL_ITEMS);
+    }, []);
 
-        const handleMouseEnter = () => {
-            timeoutId = setTimeout(() => {
-                setShowIcon(true);
-            }, 300); // 延迟300ms显示，避免鼠标快速划过时显示
-        };
-
-        const handleMouseLeave = () => {
-            clearTimeout(timeoutId);
-            if (!isIconDragging) {
-                setShowIcon(false);
-            }
-        };
-
-        const container = containerRef.current;
-        if (container) {
-            container.addEventListener('mouseenter', handleMouseEnter);
-            container.addEventListener('mouseleave', handleMouseLeave);
-
-            return () => {
-                container.removeEventListener('mouseenter', handleMouseEnter);
-                container.removeEventListener('mouseleave', handleMouseLeave);
-                clearTimeout(timeoutId);
-            };
-        }
-    }, [isIconDragging]);
-
-    // 处理拖拽图标鼠标按下
-    const handleIconMouseDown = (e) => {
-        e.preventDefault();
+    /**
+     * 拖动开始
+     */
+    const handleDragStart = (e, itemId) => {
         e.stopPropagation();
 
-        setIsIconDragging(true);
-        setIsDragging(true);
+        const draggableItem = e.currentTarget.closest('.draggable-item');
+        if (!draggableItem) return;
 
-        // 记录初始位置
-        dragStartPos.current = {
-            x: e.clientX,
-            y: e.clientY
-        };
+        dragItemRef.current = draggableItem;
 
-        containerStartPos.current = { ...position };
+        // 设置拖拽数据
+        e.dataTransfer.setData('text/plain', itemId);
+        e.dataTransfer.effectAllowed = 'move';
+        setDraggingId(itemId);
 
-        // 添加全局事件监听器
-        document.addEventListener('mousemove', handleIconMouseMove);
-        document.addEventListener('mouseup', handleIconMouseUp);
+        // 创建拖拽预览
+        const dragPreview = createDragPreview(draggableItem);
+        e.dataTransfer.setDragImage(dragPreview, 20, 20);
 
         // 添加拖拽样式
-        if (containerRef.current) {
-            containerRef.current.classList.add('dragging');
-        }
-        if (dragIconRef.current) {
-            dragIconRef.current.classList.add('icon-active');
-        }
+        draggableItem.classList.add('dragging');
     };
 
-    // 处理拖拽图标鼠标移动
-    const handleIconMouseMove = (e) => {
-        if (!isIconDragging) return;
+    /**
+     * 创建拖拽预览
+     */
+    const createDragPreview = (element) => {
+        const preview = element.cloneNode(true);
+        // preview.style.width = `${element.offsetWidth}px`;
+        preview.style.width = `100px`;
+        preview.style.opacity = '0.7';
+        preview.style.position = 'fixed';
+        preview.style.left = '-1000px';
+        preview.style.top = '-1000px';
+        preview.classList.add('drag-preview');
+        document.body.appendChild(preview);
 
-        // 计算移动距离
-        const deltaX = e.clientX - dragStartPos.current.x;
-        const deltaY = e.clientY - dragStartPos.current.y;
+        setTimeout(() => {
+            if (document.body.contains(preview)) {
+                document.body.removeChild(preview);
+            }
+        }, 0);
 
-        // 更新容器位置
-        const newX = containerStartPos.current.x + deltaX;
-        const newY = containerStartPos.current.y + deltaY;
+        return preview;
+    };
 
-        // 边界检查（防止拖出可视区域）
-        const maxX = window.innerWidth - (containerRef.current?.offsetWidth || 300);
-        const maxY = window.innerHeight - (containerRef.current?.offsetHeight || 200);
+    /**
+     * 拖动经过 - 实时更新位置
+     */
+    const handleDragOver = (e, itemId) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
 
-        setPosition({
-            x: Math.max(0, Math.min(newX, maxX)),
-            y: Math.max(0, Math.min(newY, maxY))
+        if (draggingId === itemId) return;
+
+        // 节流处理，避免过于频繁的更新
+        const now = Date.now();
+        if (now - lastUpdatedTime.current < THROTTLE_DELAY) return;
+        lastUpdatedTime.current = now;
+
+        // 计算鼠标在目标元素中的位置
+        const rect = e.currentTarget.getBoundingClientRect();
+        console.log('rect',rect);
+        console.log('e.clientY', e.clientY);
+        const mouseY = e.clientY - rect.top;
+        const position = mouseY < rect.height / 2 ? 'before' : 'after';
+        console.log('position', position);
+
+        // 如果位置没变化，不更新
+        if (dragOverId === itemId && dragPosition === position) return;
+
+        setDragOverId(itemId);
+        setDragPosition(position);
+
+        // 实时更新列表顺序
+        setItems(prevItems => {
+            const itemsCopy = [...prevItems];
+            const draggedIndex = itemsCopy.findIndex(item => item.id === draggingId);
+            const targetIndex = itemsCopy.findIndex(item => item.id === itemId);
+
+            if (draggedIndex === -1 || targetIndex === -1) return prevItems;
+
+            // 如果拖动元素和目标的相对位置没变，不更新
+            const isSameRelativePosition =
+                (draggedIndex < targetIndex && position === 'after') ||
+                (draggedIndex > targetIndex && position === 'before');
+
+            if (Math.abs(draggedIndex - targetIndex) === 1 && isSameRelativePosition) {
+                return prevItems;
+            }
+
+            // 移除被拖动的元素
+            const [draggedItem] = itemsCopy.splice(draggedIndex, 1);
+
+            // 计算新的插入位置
+            let newIndex = targetIndex;
+            if (position === 'after' && draggedIndex < targetIndex) {
+                newIndex = targetIndex; // 从上往下拖，放在目标后面
+            } else if (position === 'after' && draggedIndex > targetIndex) {
+                newIndex = targetIndex + 1; // 从下往上拖，放在目标后面
+            } else if (position === 'before' && draggedIndex > targetIndex) {
+                newIndex = targetIndex; // 从下往上拖，放在目标前面
+            } else if (position === 'before' && draggedIndex < targetIndex) {
+                newIndex = targetIndex - 1; // 从上往下拖，放在目标前面
+            }
+
+            // 确保索引有效
+            newIndex = Math.max(0, Math.min(itemsCopy.length, newIndex));
+
+            // 插入到新位置
+            itemsCopy.splice(newIndex, 0, draggedItem);
+            return itemsCopy;
         });
     };
 
-    // 处理拖拽图标鼠标释放
-    const handleIconMouseUp = () => {
-        setIsIconDragging(false);
-        setIsDragging(false);
-
-        // 移除全局事件监听器
-        document.removeEventListener('mousemove', handleIconMouseMove);
-        document.removeEventListener('mouseup', handleIconMouseUp);
-
-        // 移除拖拽样式
-        if (containerRef.current) {
-            containerRef.current.classList.remove('dragging');
-        }
-        if (dragIconRef.current) {
-            dragIconRef.current.classList.remove('icon-active');
-        }
-
-        // 如果鼠标不在容器内，隐藏图标
-        if (!isHovered) {
-            setTimeout(() => {
-                if (!isIconDragging) {
-                    setShowIcon(false);
-                }
-            }, 500); // 延迟500ms隐藏
+    /**
+     * 拖动离开
+     */
+    const handleDragLeave = (e) => {
+        // 只有当鼠标离开当前元素且没有进入子元素时，才清除指示器
+        const relatedTarget = e.relatedTarget;
+        if (!e.currentTarget.contains(relatedTarget)) {
+            setDragOverId(null);
+            setDragPosition(null);
         }
     };
 
-    // 处理容器点击（阻止拖拽图标时触发容器点击）
-    const handleContainerClick = (e) => {
-        if (isIconDragging) {
-            e.stopPropagation();
+    /**
+     * 放置处理
+     */
+    const handleDrop = (e, targetId) => {
+        e.preventDefault();
+
+        // 获取拖动的数据
+        const draggedId = e.dataTransfer.getData('text/plain');
+
+        // 如果拖动的是同一个元素，不做处理
+        if (!draggedId || draggedId === targetId) {
+            cleanupDrag();
+            return;
         }
+
+        // 列表已经在dragOver中更新过了，这里只需要同步确保正确
+        setItems(prevItems => {
+            const itemsCopy = [...prevItems];
+            const draggedIndex = itemsCopy.findIndex(item => item.id === draggedId);
+            const targetIndex = itemsCopy.findIndex(item => item.id === targetId);
+
+            // 如果元素已经在新位置，直接返回
+            if (draggedIndex === -1 || targetIndex === -1) return prevItems;
+
+            // 检查是否已经在正确位置
+            const expectedPosition = dragPosition === 'before' ? targetIndex - 1 : targetIndex;
+            if (draggedIndex === expectedPosition) return prevItems;
+
+            // 重新排序确保正确
+            const [draggedItem] = itemsCopy.splice(draggedIndex, 1);
+            const newIndex = dragPosition === 'before' ? targetIndex - 1 : targetIndex + 1;
+            const adjustedIndex = Math.max(0, Math.min(itemsCopy.length, newIndex));
+            itemsCopy.splice(adjustedIndex, 0, draggedItem);
+
+            return itemsCopy;
+        });
+
+        cleanupDrag();
+    };
+
+    /**
+     * 拖动结束
+     */
+    const handleDragEnd = () => {
+        cleanupDrag();
+    };
+
+    /**
+     * 清理拖拽状态
+     */
+    const cleanupDrag = () => {
+        setDraggingId(null);
+        setDragOverId(null);
+        setDragPosition(null);
+        lastUpdatedTime.current = 0;
+
+        // 移除拖拽样式
+        if (dragItemRef.current) {
+            dragItemRef.current.classList.remove('dragging');
+            dragItemRef.current = null;
+        }
+    };
+
+    /**
+     * 处理项目选中
+     */
+    const handleSelectItem = (itemId) => {
+        setItems(prevItems =>
+            prevItems.map(item => ({
+                ...item,
+                isSelected: item.id === itemId
+            }))
+        );
+    };
+
+    /**
+     * 阻止默认拖拽行为
+     */
+    const preventDrag = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
     };
 
     return (
-        <div className="drag-icon-page">
-            <div className="header">
-                <h1>✨ 悬浮拖拽按钮组件</h1>
-                <p className="subtitle">悬停显示拖拽按钮 · 拖拽按钮移动整个容器</p>
-            </div>
-
-            <div className="instructions">
-                <div className="instruction-card">
-                    <div className="instruction-icon">🎯</div>
-                    <div className="instruction-content">
-                        <h3>操作指南</h3>
-                        <p>将鼠标<strong>悬停</strong>在彩色卡片上，右上角会出现拖拽按钮。</p>
-                        <p><strong>拖拽按钮</strong>即可移动整个卡片，卡片内容本身不可拖拽。</p>
-                    </div>
-                </div>
-
-                <div className="instruction-card">
-                    <div className="instruction-icon">⚙️</div>
-                    <div className="instruction-content">
-                        <h3>实现原理</h3>
-                        <ul>
-                            <li>通过 <code>mouseenter/mouseleave</code> 控制按钮显示</li>
-                            <li>在按钮上监听 <code>mousedown/mousemove/mouseup</code></li>
-                            <li>计算鼠标位移，更新容器位置</li>
-                            <li>添加边界检测和流畅动画</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            {/* 可拖拽容器 */}
-            <div
-                ref={containerRef}
-                className="drag-container"
-                style={{
-                    transform: `translate(${position.x}px, ${position.y}px)`,
-                    cursor: isDragging ? 'grabbing' : 'default'
-                }}
-                onClick={handleContainerClick}
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-            >
-                {/* 悬浮拖拽按钮 */}
+        <div className="container" ref={containerRef}>
+            {items.map((item) => (
                 <div
-                    ref={dragIconRef}
-                    className={`drag-icon ${showIcon ? 'visible' : ''} ${isIconDragging ? 'dragging' : ''}`}
-                    onMouseDown={handleIconMouseDown}
-                    title="拖拽此处移动"
+                    key={item.id}
+                    className={`draggable-item ${draggingId === item.id ? 'dragging' : ''}`}
+                    // 放置区域事件
+                    onDragOver={(e) => handleDragOver(e, item.id)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, item.id)}
+                    onDragEnd={handleDragEnd}
+                    // 阻止行元素自身的拖拽
+                    draggable="false"
+                    onDragStart={preventDrag}
                 >
-                    <div className="icon-dots">
-            <span className="dot-row">
-              <span className="dot"></span>
-              <span className="dot"></span>
-              <span className="dot"></span>
-            </span>
-                        <span className="dot-row">
-              <span className="dot"></span>
-              <span className="dot"></span>
-              <span className="dot"></span>
-            </span>
+                    {/* 拖拽手柄 */}
+                    <div
+                        className="drag-handle"
+                        draggable="true"
+                        onDragStart={(e) => handleDragStart(e, item.id)}
+                        title="拖拽排序"
+                    >
+                        <DragOutlined style={{ marginRight: 10 }} />
                     </div>
+
+                    {/* 内容区域 */}
+                    <div
+                        className={`item-content ${item.isSelected ? 'active' : ''}`}
+                        onClick={() => handleSelectItem(item.id)}
+                        draggable="false"
+                        onDragStart={preventDrag}
+                    >
+                        <div className="node-content">{item.content}</div>
+                    </div>
+
+                    {/* 动态位置指示器 */}
+                    {dragOverId === item.id && dragPosition === 'before' && (
+                        <div className="drop-indicator before" />
+                    )}
                 </div>
-
-                {/* 容器内容 */}
-                <div className="container-content">
-                    <div className="content-header">
-                        <div className="content-badge">可拖拽容器</div>
-                        <div className="content-status">
-                            {isDragging ? (
-                                <span className="status-dragging">拖拽中...</span>
-                            ) : (
-                                <span className="status-idle">等待拖拽</span>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="content-body">
-                        <h2>悬浮按钮拖拽示例</h2>
-                        <p>这是一个通过悬浮按钮控制拖拽的演示容器。</p>
-                        <p>只有右上角的拖拽按钮可以拖拽移动此容器，容器内容本身不可拖拽。</p>
-
-                        <div className="content-features">
-                            <div className="feature">
-                                <span className="feature-icon">🎨</span>
-                                <span className="feature-text">平滑动画</span>
-                            </div>
-                            <div className="feature">
-                                <span className="feature-icon">📏</span>
-                                <span className="feature-text">边界限制</span>
-                            </div>
-                            <div className="feature">
-                                <span className="feature-icon">⏱️</span>
-                                <span className="feature-text">延迟显示</span>
-                            </div>
-                        </div>
-
-                        <div className="content-coordinates">
-                            <div className="coordinate">
-                                <span className="coord-label">X坐标:</span>
-                                <span className="coord-value">{Math.round(position.x)}px</span>
-                            </div>
-                            <div className="coordinate">
-                                <span className="coord-label">Y坐标:</span>
-                                <span className="coord-value">{Math.round(position.y)}px</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* 状态面板 */}
-            <div className="status-panel">
-                <div className="status-header">
-                    <h3>📊 实时状态</h3>
-                    <div className="status-indicators">
-                        <div className={`indicator ${showIcon ? 'active' : ''}`}>
-                            <div className="indicator-light"></div>
-                            <span>按钮显示</span>
-                        </div>
-                        <div className={`indicator ${isIconDragging ? 'active' : ''}`}>
-                            <div className="indicator-light"></div>
-                            <span>拖拽中</span>
-                        </div>
-                        <div className={`indicator ${isHovered ? 'active' : ''}`}>
-                            <div className="indicator-light"></div>
-                            <span>悬停中</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="status-details">
-                    <div className="status-detail">
-                        <span className="detail-label">容器位置:</span>
-                        <span className="detail-value">
-                          ({position.x}, {position.y})
-                        </span>
-                    </div>
-                    <div className="status-detail">
-                        <span className="detail-label">拖拽按钮:</span>
-                        <span className="detail-value">
-                          {showIcon ? '可见' : '隐藏'} • {isIconDragging ? '激活中' : '未激活'}
-                        </span>
-                    </div>
-                    <div className="status-detail">
-                        <span className="detail-label">交互提示:</span>
-                        <span className="detail-value">
-              {showIcon
-                  ? '请拖拽右上角按钮移动容器'
-                  : '请将鼠标悬停在容器上显示拖拽按钮'}
-            </span>
-                    </div>
-                </div>
-            </div>
-
-            <div className="explanation">
-                <h3>💡 技术要点</h3>
-                <div className="code-snippet">
-          <pre>{`// 1. 显示/隐藏控制（延迟避免误触）
-useEffect(() => {
-  const handleMouseEnter = () => {
-    timeoutId = setTimeout(() => setShowIcon(true), 300);
-  };
-}, []);
-
-// 2. 拖拽逻辑（计算位置增量）
-const handleIconMouseMove = (e) => {
-  const deltaX = e.clientX - dragStartPos.current.x;
-  const deltaY = e.clientY - dragStartPos.current.y;
-  setPosition({
-    x: containerStartPos.current.x + deltaX,
-    y: containerStartPos.current.y + deltaY
-  });
-};
-
-// 3. 边界检测（防止拖出屏幕）
-const maxX = window.innerWidth - containerWidth;
-const maxY = window.innerHeight - containerHeight;
-setPosition({
-  x: Math.max(0, Math.min(newX, maxX)),
-  y: Math.max(0, Math.min(newY, maxY))
-});`}</pre>
-                </div>
-            </div>
+            ))}
         </div>
     );
 };
 
-export default DragIconComponent;
+export default DragMockInsert;

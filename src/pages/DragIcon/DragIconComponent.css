@@ -1,460 +1,152 @@
-/* DragIconComponent.css */
-:root {
-    --primary-color: #6366f1;
-    --primary-light: #818cf8;
-    --primary-dark: #4f46e5;
-    --success-color: #10b981;
-    --warning-color: #f59e0b;
-    --danger-color: #ef4444;
-    --background-color: #f8fafc;
-    --card-bg: #ffffff;
-    --text-primary: #1e293b;
-    --text-secondary: #64748b;
-    --border-radius: 16px;
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
-    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
-    --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.1);
-    --shadow-xl: 0 20px 50px -12px rgba(0,0,0,0.25);
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
+/* dragMockInsert.css */
 
-.drag-icon-page {
-    min-height: 100vh;
-    background: linear-gradient(135deg, #f0f4ff 0%, #f8fafc 100%);
-    padding: 30px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    color: var(--text-primary);
-}
-
-.header {
-    text-align: center;
-    margin-bottom: 40px;
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.header h1 {
-    font-size: 3rem;
-    background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    margin-bottom: 10px;
-    font-weight: 800;
-}
-
-.subtitle {
-    font-size: 1.2rem;
-    color: var(--text-secondary);
-    margin-bottom: 30px;
-}
-
-/* 说明卡片 */
-.instructions {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
-    margin-bottom: 40px;
-    max-width: 900px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.instruction-card {
-    background: var(--card-bg);
-    border-radius: var(--border-radius);
-    padding: 25px;
-    box-shadow: var(--shadow-md);
+.container {
     display: flex;
-    gap: 20px;
-    transition: var(--transition);
+    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 20px;
+    min-height: 120px;
+    padding: 16px;
+    background-color: white;
+    border-radius: 8px;
+    border: 2px dashed #dee2e6;
+    transition: border-color 0.3s;
+    font-size: 14px;
 }
 
-.instruction-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-lg);
+.container:hover {
+    border-color: #adb5bd;
 }
 
-.instruction-icon {
-    font-size: 2.5rem;
-    flex-shrink: 0;
+/* 整行容器 */
+.draggable-item {
+    display: flex;
+    align-items: center;
+    position: relative;
+    background-color: white;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    will-change: transform; /* 优化动画性能 */
 }
 
-.instruction-content h3 {
-    color: var(--primary-color);
-    margin-bottom: 10px;
-    font-size: 1.3rem;
+/* 拖拽过程中的元素 */
+.draggable-item.dragging {
+    opacity: 0.4;
+    background-color: #f8f9fa;
+    box-shadow: 0 4px 12px rgba(65, 158, 254, 0.3);
+    z-index: 10;
+    position: relative;
 }
 
-.instruction-content p {
-    color: var(--text-secondary);
-    line-height: 1.6;
-    margin-bottom: 10px;
+/* 拖拽过程中的其他元素动画 */
+.draggable-item:not(.dragging) {
+    transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
-.instruction-content ul {
-    margin: 10px 0;
-    padding-left: 20px;
-}
-
-.instruction-content li {
-    color: var(--text-secondary);
-    margin-bottom: 5px;
-    font-size: 0.95rem;
-}
-
-.instruction-content code {
-    background: #f1f5f9;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: 'Courier New', monospace;
-    font-size: 0.9rem;
-    color: var(--primary-dark);
-}
-
-/* 🔥 核心：可拖拽容器 */
-.drag-container {
-    position: fixed;
-    width: 350px;
-    background: white;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-xl);
-    overflow: hidden;
-    transition: transform 0.1s ease-out;
-    z-index: 100;
-    user-select: none;
-    border: 2px solid transparent;
-}
-
-.drag-container:hover {
-    border-color: rgba(99, 102, 241, 0.2);
-}
-
-.drag-container.dragging {
-    cursor: grabbing;
-    box-shadow: var(--shadow-xl), 0 0 0 3px rgba(99, 102, 241, 0.1);
-    border-color: var(--primary-color);
-    opacity: 0.95;
-}
-
-/* 🔥 核心：悬浮拖拽按钮 */
-.drag-icon {
-    position: absolute;
-    top: -20px;
-    right: -20px;
-    width: 48px;
-    height: 48px;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-    border-radius: 50%;
+/* 拖拽手柄 */
+.drag-handle {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 40px;
+    height: 100%;
     cursor: grab;
-    z-index: 101;
-    opacity: 0;
-    transform: scale(0.8);
-    transition: var(--transition);
-    box-shadow: var(--shadow-lg);
-    border: 3px solid white;
+    user-select: none;
+    opacity: 0.5;
+    transition: opacity 0.2s;
 }
 
-.drag-icon.visible {
+.drag-handle:hover {
     opacity: 1;
-    transform: scale(1);
 }
 
-.drag-icon:hover {
-    transform: scale(1.1);
-    background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
-    box-shadow: var(--shadow-xl);
-}
-
-.drag-icon.dragging {
+.drag-handle:active {
     cursor: grabbing;
-    background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
-    transform: scale(0.95);
 }
 
-.drag-icon.icon-active {
-    animation: iconPulse 0.5s ease-in-out infinite alternate;
-}
-
-@keyframes iconPulse {
-    from {
-        box-shadow: var(--shadow-lg), 0 0 0 0 rgba(99, 102, 241, 0.4);
-    }
-    to {
-        box-shadow: var(--shadow-lg), 0 0 0 10px rgba(99, 102, 241, 0);
-    }
-}
-
-/* 按钮内部点阵样式 */
-.icon-dots {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.dot-row {
-    display: flex;
-    gap: 3px;
-}
-
-.dot {
-    width: 4px;
-    height: 4px;
-    background: white;
-    border-radius: 50%;
-    opacity: 0.9;
-}
-
-/* 容器内容 */
-.container-content {
-    padding: 25px;
-}
-
-.content-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.content-badge {
-    background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
-    color: white;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-
-.content-status {
-    font-size: 0.9rem;
-}
-
-.status-dragging {
-    color: var(--warning-color);
-    font-weight: 600;
-    animation: pulse 1s infinite;
-}
-
-.status-idle {
-    color: var(--success-color);
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
-}
-
-.content-body h2 {
-    color: var(--text-primary);
-    margin-bottom: 15px;
-    font-size: 1.5rem;
-}
-
-.content-body p {
-    color: var(--text-secondary);
-    line-height: 1.6;
-    margin-bottom: 15px;
-}
-
-.content-features {
-    display: flex;
-    gap: 15px;
-    margin: 20px 0;
-    padding: 15px;
-    background: #f8fafc;
-    border-radius: 12px;
-}
-
-.feature {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.9rem;
-}
-
-.feature-icon {
-    font-size: 1.2rem;
-}
-
-.feature-text {
-    color: var(--text-secondary);
-}
-
-.content-coordinates {
-    display: flex;
-    gap: 20px;
-    margin-top: 25px;
-    padding-top: 20px;
-    border-top: 1px solid #e2e8f0;
-}
-
-.coordinate {
+/* 内容区域 */
+.item-content {
     flex: 1;
-}
-
-.coord-label {
-    display: block;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    margin-bottom: 5px;
-}
-
-.coord-value {
-    display: block;
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--primary-color);
-    font-family: 'Courier New', monospace;
-}
-
-/* 状态面板 */
-.status-panel {
-    position: fixed;
-    bottom: 30px;
-    left: 30px;
-    right: 30px;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-radius: var(--border-radius);
-    padding: 25px;
-    box-shadow: var(--shadow-lg);
-    border: 1px solid rgba(99, 102, 241, 0.1);
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.status-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.status-header h3 {
-    color: var(--primary-color);
-    margin: 0;
-}
-
-.status-indicators {
-    display: flex;
-    gap: 20px;
-}
-
-.indicator {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-}
-
-.indicator.active {
-    color: var(--primary-color);
-}
-
-.indicator-light {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: #e2e8f0;
-    transition: var(--transition);
-}
-
-.indicator.active .indicator-light {
-    background: var(--success-color);
-    box-shadow: 0 0 10px var(--success-color);
-}
-
-.status-details {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 15px;
-}
-
-.status-detail {
-    padding: 12px;
-    background: #f8fafc;
+    min-height: 30px;
+    padding: 16px;
     border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
 }
 
-.detail-label {
-    display: block;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    margin-bottom: 5px;
+.item-content:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(65, 158, 254, 0.3);
 }
 
-.detail-value {
-    display: block;
-    font-size: 1rem;
-    color: var(--text-primary);
-    font-weight: 500;
+.item-content.active {
+    border: 1px solid rgba(65, 158, 254, 0.6);
 }
 
-/* 技术解释部分 */
-.explanation {
-    margin-top: 600px; /* 确保有足够空间显示可拖拽容器 */
-    padding: 30px;
-    background: white;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-md);
-    max-width: 900px;
-    margin-left: auto;
-    margin-right: auto;
+/* 放置位置指示器 */
+.drop-indicator {
+    position: absolute;
+    z-index: 5;
+    pointer-events: none;
+    transition: all 0.2s ease;
 }
 
-.explanation h3 {
-    color: var(--primary-color);
-    margin-bottom: 20px;
-    font-size: 1.5rem;
+.drop-indicator.before {
+    top: -2px;
+    left: 40px;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #419efe, #36cfc9);
+    box-shadow: 0 0 8px rgba(65, 158, 254, 0.6);
+    animation: pulse 1.5s infinite;
 }
 
-.code-snippet {
-    background: #1e293b;
-    border-radius: 12px;
-    padding: 25px;
-    overflow-x: auto;
+.drop-indicator.after {
+    bottom: -2px;
+    left: 40px;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #419efe, #36cfc9);
+    box-shadow: 0 0 8px rgba(65, 158, 254, 0.6);
+    animation: pulse 1.5s infinite;
 }
 
-.code-snippet pre {
-    color: #e2e8f0;
-    font-family: 'Fira Code', 'Courier New', monospace;
-    font-size: 0.9rem;
-    line-height: 1.5;
-    margin: 0;
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-    .drag-icon-page {
-        padding: 15px;
+/* 脉冲动画效果 */
+@keyframes pulse {
+    0% {
+        opacity: 0.5;
     }
-
-    .header h1 {
-        font-size: 2rem;
+    50% {
+        opacity: 1;
     }
-
-    .instructions {
-        grid-template-columns: 1fr;
+    100% {
+        opacity: 0.5;
     }
+}
 
-    .drag-container {
-        width: calc(100vw - 60px);
-        max-width: 350px;
-    }
+/* 拖拽预览 */
+.drag-preview {
+    pointer-events: none;
+    z-index: 1000;
+}
 
-    .status-panel {
-        position: static;
-        margin-top: 40px;
-    }
+.node-content {
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
 
-    .status-indicators {
-        flex-direction: column;
-        gap: 10px;
-    }
+/* 为拖拽过程中的元素添加平滑移动动画 */
+.draggable-item {
+    animation-duration: 0.3s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
