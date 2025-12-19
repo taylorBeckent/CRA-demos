@@ -54,6 +54,7 @@ const DragMockInsert = () => {
                 <div
                     key={`drag-api-${item.id}`}
                     className="draggable-item"
+                    draggable={item.draggable}
                     onMouseEnter={(e) => handleMouseAction(e, item, 'mouseEnter')}
                     onMouseLeave={(e) => handleMouseAction(e, item, 'mouseLeave')}
                 >

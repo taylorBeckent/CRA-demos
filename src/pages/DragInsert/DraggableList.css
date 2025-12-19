@@ -1,378 +1,116 @@
-/* DraggableList.css */
-:root {
-    --transition-speed: 0.25s;
-    --insert-line-height: 4px;
-    --border-radius: 12px;
-}
+/* dragMockInsert.css */
 
-.insertion-draggable-container {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 20px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-.demo-header {
-    text-align: center;
-    margin-bottom: 40px;
-    padding-bottom: 20px;
-    border-bottom: 2px solid #f0f0f0;
-}
-
-.demo-header h1 {
-    font-size: 2.8rem;
-    background: linear-gradient(90deg, #4361ee, #4cc9f0);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    margin-bottom: 10px;
-}
-
-.demo-header p {
-    font-size: 1.2rem;
-    color: #6c757d;
-}
-
-.demo-controls {
+.container {
     display: flex;
-    gap: 15px;
-    justify-content: center;
-    margin-bottom: 30px;
-}
-
-.btn {
-    padding: 12px 24px;
-    border: none;
+    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 20px;
+    min-height: 120px;
+    padding: 16px;
+    background-color: white;
     border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition-speed) ease;
+    border: 2px dashed #dee2e6;
+    transition: border-color 0.3s;
+    font-size: 14px;
 }
 
-.btn-add {
-    background: linear-gradient(90deg, #4cc9f0, #4361ee);
-    color: white;
-}
-
-.btn-add:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(67, 97, 238, 0.3);
-}
-
-.btn-reset {
-    background: #f8f9fa;
-    color: #495057;
-    border: 2px solid #dee2e6;
-}
-
-.btn-reset:hover {
-    background: #e9ecef;
+.container:hover {
     border-color: #adb5bd;
 }
 
-.instructions {
-    background: #f8f9fa;
-    border-radius: var(--border-radius);
-    padding: 25px;
-    margin-bottom: 30px;
-    border-left: 5px solid #4cc9f0;
-}
-
-.instructions h3 {
-    color: #2b2d42;
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.instructions p {
-    color: #495057;
-    margin-bottom: 15px;
-    line-height: 1.6;
-}
-
-.instructions ul {
-    list-style: none;
-    padding: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.instructions li {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.highlight {
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 0.9rem;
-}
-
-.highlight.before {
-    background: rgba(76, 201, 240, 0.15);
-    color: #4361ee;
-    border: 1px solid rgba(67, 97, 238, 0.3);
-}
-
-.highlight.after {
-    background: rgba(67, 97, 238, 0.15);
-    color: #4361ee;
-    border: 1px solid rgba(67, 97, 238, 0.3);
-}
-
-.highlight.inner {
-    background: rgba(106, 13, 173, 0.15);
-    color: #6a0dad;
-    border: 1px solid rgba(106, 13, 173, 0.3);
-}
-
-/* 可拖拽列表样式 */
-.list-container {
-    background: white;
-    border-radius: var(--border-radius);
-    padding: 25px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-    margin-bottom: 30px;
-}
-
-.draggable-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
+/* 整行容器 */
 .draggable-item {
-    padding: 22px 25px;
-    margin: 16px 0;
-    background: white;
-    border-radius: var(--border-radius);
-    border: 2px solid transparent;
-    cursor: grab;
-    position: relative;
-    transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
-    user-select: none;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
-    transform-origin: center;
-}
-
-.draggable-item:hover {
-    background: #f8f9ff;
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(67, 97, 238, 0.12);
-    border-color: #e0e7ff;
-}
-
-.draggable-item.is-dragging {
-    opacity: 0.3;
-    cursor: grabbing;
-    transform: scale(0.98);
-    box-shadow: none;
-}
-
-/* 被拖拽源元素的样式 */
-.dragging-source {
-    opacity: 0.3 !important;
-    cursor: grabbing !important;
-    border-style: dashed !important;
-}
-
-/* 项目内容样式 */
-.item-content {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 15px;
+    position: relative;
+    background-color: white;
+    border-radius: 8px;
+    transition: background-color 0.2s;
 }
 
-.item-number {
-    width: 36px;
-    height: 36px;
-    background: linear-gradient(135deg, #4361ee, #4cc9f0);
-    color: white;
-    font-weight: bold;
-    border-radius: 50%;
+.draggable-item.dragging {
+    opacity: 0.5;
+    box-shadow: 0 0 10px rgba(65, 158, 254, 0.3);
+}
+
+/* 拖拽手柄 */
+.drag-handle {
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
-    font-size: 1.1rem;
+    width: 40px;
+    height: 100%;
+    cursor: grab;
+    user-select: none;
+    opacity: 0.5;
+    transition: opacity 0.2s;
 }
 
-.item-text {
-    flex: 1;
-    font-size: 1.2rem;
-    font-weight: 500;
-    color: #2b2d42;
-}
-
-.item-hint {
-    font-size: 0.9rem;
-    color: #6c757d;
-    opacity: 0.7;
-    transition: opacity var(--transition-speed);
-}
-
-.draggable-item:hover .item-hint {
+.drag-handle:hover {
     opacity: 1;
 }
 
-/* 🔥 核心：插入位置视觉反馈 */
-.drag-over-inner {
-    border-color: #4cc9f0 !important;
-    background-color: rgba(76, 201, 240, 0.08) !important;
-    box-shadow: inset 0 0 0 2px rgba(76, 201, 240, 0.2), 0 5px 15px rgba(76, 201, 240, 0.15) !important;
+.drag-handle:active {
+    cursor: grabbing;
 }
 
-/* 插入线样式 - 使用伪元素 */
-.drag-over-before::before,
-.drag-over-after::after {
-    content: '';
+/* 内容区域 */
+.item-content {
+    flex: 1;
+    min-height: 30px;
+    padding: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+}
+
+.item-content:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(65, 158, 254, 0.3);
+}
+
+.item-content.active {
+    border: 1px solid rgba(65, 158, 254, 0.6);
+}
+
+/* 阻止内容区域拖拽的样式 */
+.item-content[draggable="false"] {
+    cursor: pointer;
+}
+
+/* 放置位置指示器 */
+.drop-indicator {
     position: absolute;
-    left: 10%;
-    right: 10%;
-    height: var(--insert-line-height);
-    border-radius: 2px;
-    z-index: 100;
-    background: linear-gradient(90deg,
-    transparent 0%,
-    #4cc9f0 20%,
-    #4361ee 50%,
-    #4cc9f0 80%,
-    transparent 100%);
-    box-shadow: 0 0 15px rgba(67, 97, 238, 0.8);
-    animation: linePulse 1.2s ease-in-out infinite;
+    background-color: #419efe;
+    z-index: 10;
     pointer-events: none;
 }
 
-.drag-over-before::before {
-    top: -10px;
+.drop-indicator.before {
+    top: -2px;
+    left: 40px; /* 从拖拽图标后面开始 */
+    right: 0;
+    height: 2px;
 }
 
-.drag-over-after::after {
-    bottom: -10px;
+.drop-indicator.after {
+    bottom: -2px;
+    left: 40px; /* 从拖拽图标后面开始 */
+    right: 0;
+    height: 2px;
 }
 
-@keyframes linePulse {
-    0%, 100% {
-        opacity: 0.7;
-        transform: scaleX(0.9);
-    }
-    50% {
-        opacity: 1;
-        transform: scaleX(1);
-    }
-}
-
-/* 为插入线腾出空间 */
-.drag-over-before {
-    margin-top: 24px !important;
-}
-
-.drag-over-after {
-    margin-bottom: 24px !important;
-}
-
-/* 状态面板 */
-.status-panel {
-    background: linear-gradient(135deg, #2b2d42 0%, #1a1b2e 100%);
-    color: white;
-    border-radius: var(--border-radius);
-    padding: 30px;
-    margin-bottom: 30px;
-}
-
-.status-panel h3 {
-    color: #8d99ae;
-    margin-bottom: 25px;
-    font-size: 1.4rem;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.status-panel h3::before {
-    content: '📊';
-    font-size: 1.2rem;
-}
-
-.status-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-}
-
-.status-item {
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 10px;
-    padding: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all var(--transition-speed) ease;
-}
-
-.status-item:hover {
-    background: rgba(255, 255, 255, 0.12);
-    transform: translateY(-3px);
-    border-color: rgba(76, 201, 240, 0.3);
-}
-
-.status-label {
-    font-size: 0.95rem;
-    color: #8d99ae;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.status-value {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #4cc9f0;
-    min-height: 2.2rem;
-    display: flex;
-    align-items: center;
-}
-
-.demo-footer {
-    text-align: center;
-    color: #6c757d;
-    font-size: 0.95rem;
-    padding-top: 20px;
-    border-top: 1px solid #f0f0f0;
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-    .insertion-draggable-container {
-        padding: 15px;
-    }
-
-    .demo-header h1 {
-        font-size: 2rem;
-    }
-
-    .instructions ul {
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .item-content {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-
-    .item-hint {
-        align-self: flex-end;
-    }
-
-    .status-grid {
-        grid-template-columns: 1fr;
-    }
+.node-content {
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
