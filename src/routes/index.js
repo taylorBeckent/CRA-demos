@@ -6,6 +6,7 @@ const DragMock = lazy(() => import('../pages/DragMock'));
 const DragMockInsert = lazy(() => import('../pages/DragMockInsert'));
 const DragInsert = lazy(() => import('../pages/DragInsert'));
 const DragIcon = lazy(() => import('../pages/DragIcon'));
+const DragSort = lazy(() => import('../pages/DragSortComponent'));
 const MainLayout = lazy(() => import('../layouts/MainLayout'));
 
 // const routes = [
@@ -51,6 +52,11 @@ const routes = [
     {
         path: '/DragIcon',
         element: <DragIcon/>,
+        exact: true,
+    },
+    {
+        path: '/DragSort',
+        element: <DragSort/>,
         exact: true,
     },
 ]

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import './DragIconComponent.css';
 import { DragOutlined } from '@ant-design/icons';
 
@@ -10,256 +10,390 @@ const INITIAL_ITEMS = [
     { id: 'item-5', content: '测试与发布上线', isSelected: false },
 ];
 
-/**
- * 实时拖拽排序组件
- */
+// 防抖函数
+const debounce = (func, wait) => {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func(...args), wait);
+    };
+};
+
 const DragMockInsert = () => {
     const [items, setItems] = useState([]);
     const [draggingId, setDraggingId] = useState(null);
-    const [dragOverId, setDragOverId] = useState(null);
-    const [dragPosition, setDragPosition] = useState(null); // 'before' | 'after'
+    const [dragOverInfo, setDragOverInfo] = useState(null);
 
-    const dragItemRef = useRef(null);
     const containerRef = useRef(null);
-    const lastUpdatedTime = useRef(0);
-    const THROTTLE_DELAY = 50; // 节流延迟，防止过于频繁更新
+    const itemRefs = useRef(new Map());
+    const positionsRef = useRef(new Map());
+    const animationFrameRef = useRef(null);
+    const draggingIdRef = useRef(null);
+    const lastValidTargetRef = useRef(null); // 存储最后一个有效的目标元素
 
     useEffect(() => {
         setItems(INITIAL_ITEMS);
+        return () => {
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+            }
+        };
     }, []);
 
-    /**
-     * 拖动开始
-     */
-    const handleDragStart = (e, itemId) => {
+    // 存储元素引用
+    const setItemRef = useCallback((id, element) => {
+        if (element) {
+            itemRefs.current.set(id, element);
+        } else {
+            itemRefs.current.delete(id);
+        }
+    }, []);
+
+    // 获取所有元素位置信息
+    const updatePositions = useCallback(() => {
+        positionsRef.current.clear();
+        itemRefs.current.forEach((element, id) => {
+            if (element && element.isConnected) { // 检查元素是否仍在DOM中
+                const rect = element.getBoundingClientRect();
+                positionsRef.current.set(id, {
+                    element,
+                    top: rect.top,
+                    height: rect.height,
+                    index: items.findIndex(item => item.id === id)
+                });
+            }
+        });
+    }, [items]);
+
+    // 创建拖拽预览
+    const createDragPreview = useCallback((element) => {
+        const preview = element.cloneNode(true);
+        preview.style.width = `${element.offsetWidth}px`;
+        preview.style.position = 'fixed';
+        preview.style.left = '-1000px';
+        preview.style.top = '-1000px';
+        preview.style.zIndex = '1000';
+        preview.style.opacity = '0.8';
+        preview.style.transform = 'scale(1.02)';
+        preview.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.2)';
+        preview.classList.add('drag-preview');
+        document.body.appendChild(preview);
+        return preview;
+    }, []);
+
+    // 拖拽开始
+    const handleDragStart = useCallback((e, itemId) => {
         e.stopPropagation();
 
         const draggableItem = e.currentTarget.closest('.draggable-item');
         if (!draggableItem) return;
 
-        dragItemRef.current = draggableItem;
+        // 更新位置信息
+        updatePositions();
 
         // 设置拖拽数据
         e.dataTransfer.setData('text/plain', itemId);
         e.dataTransfer.effectAllowed = 'move';
         setDraggingId(itemId);
+        draggingIdRef.current = itemId;
 
         // 创建拖拽预览
         const dragPreview = createDragPreview(draggableItem);
-        e.dataTransfer.setDragImage(dragPreview, 20, 20);
+
+        // 设置拖拽图像
+        const dragImageOffset = 20;
+        e.dataTransfer.setDragImage(dragPreview, dragImageOffset, dragImageOffset);
 
         // 添加拖拽样式
         draggableItem.classList.add('dragging');
-    };
 
-    /**
-     * 创建拖拽预览
-     */
-    const createDragPreview = (element) => {
-        const preview = element.cloneNode(true);
-        // preview.style.width = `${element.offsetWidth}px`;
-        preview.style.width = `100px`;
-        preview.style.opacity = '0.7';
-        preview.style.position = 'fixed';
-        preview.style.left = '-1000px';
-        preview.style.top = '-1000px';
-        preview.classList.add('drag-preview');
-        document.body.appendChild(preview);
-
+        // 清理临时元素
         setTimeout(() => {
-            if (document.body.contains(preview)) {
-                document.body.removeChild(preview);
+            if (document.body.contains(dragPreview)) {
+                document.body.removeChild(dragPreview);
             }
         }, 0);
+    }, [updatePositions, createDragPreview]);
 
-        return preview;
-    };
+    // 安全地获取元素位置
+    const getSafeElementRect = useCallback((element) => {
+        if (!element || !element.isConnected) {
+            return null;
+        }
 
-    /**
-     * 拖动经过 - 实时更新位置
-     */
-    const handleDragOver = (e, itemId) => {
+        try {
+            return element.getBoundingClientRect();
+        } catch (error) {
+            console.warn('无法获取元素位置:', error);
+            return null;
+        }
+    }, []);
+
+    // 更新元素动画状态
+    const updateItemAnimations = useCallback((newItems) => {
+        const currentDraggingId = draggingIdRef.current;
+
+        if (!currentDraggingId) return;
+
+        requestAnimationFrame(() => {
+            newItems.forEach((item, index) => {
+                const element = itemRefs.current.get(item.id);
+                if (element && element.isConnected && item.id !== currentDraggingId) {
+                    const currentPos = positionsRef.current.get(item.id);
+                    if (currentPos) {
+                        const newTop = index * (currentPos.height + 16);
+                        const diff = newTop - currentPos.top;
+
+                        if (Math.abs(diff) > 2) {
+                            element.style.transform = `translateY(${diff}px)`;
+                        }
+                    }
+                }
+            });
+
+            // 更新位置缓存
+            setTimeout(() => {
+                updatePositions();
+            }, 300);
+        });
+    }, [updatePositions]);
+
+    // 使用防抖的拖拽经过处理 - 修复版本
+    const debouncedHandleDragOver = useMemo(() =>
+            debounce((event, itemId) => {
+                const currentDraggingId = draggingIdRef.current;
+
+                if (!currentDraggingId || currentDraggingId === itemId) return;
+
+                const positions = positionsRef.current;
+                if (!positions.has(currentDraggingId) || !positions.has(itemId)) return;
+
+                // 安全地获取目标元素
+                const targetElement = itemRefs.current.get(itemId);
+                if (!targetElement || !targetElement.isConnected) return;
+
+                // 安全地获取位置信息
+                const targetRect = getSafeElementRect(targetElement);
+                if (!targetRect) return;
+
+                // 计算插入位置
+                let position;
+                if (event.type === 'dragover') {
+                    // 对于拖拽事件，使用event.clientY
+                    const mouseY = event.clientY - targetRect.top;
+                    position = mouseY < targetRect.height / 2 ? 'before' : 'after';
+                } else {
+                    // 对于touch事件或其他情况，使用默认值
+                    position = 'after';
+                }
+
+                // 如果位置没变化，不更新
+                if (dragOverInfo?.id === itemId && dragOverInfo?.position === position) return;
+
+                setDragOverInfo({ id: itemId, position });
+
+                // 实时重新排序
+                if (animationFrameRef.current) {
+                    cancelAnimationFrame(animationFrameRef.current);
+                }
+
+                animationFrameRef.current = requestAnimationFrame(() => {
+                    setItems(prevItems => {
+                        const itemsCopy = [...prevItems];
+                        const draggedPos = positions.get(currentDraggingId);
+                        const targetPos = positions.get(itemId);
+
+                        if (!draggedPos || !targetPos) return prevItems;
+
+                        const draggedIndex = draggedPos.index;
+                        const targetIndex = targetPos.index;
+
+                        if (draggedIndex === -1 || targetIndex === -1) return prevItems;
+
+                        // 计算元素应该移动的方向
+                        const [draggedItem] = itemsCopy.splice(draggedIndex, 1);
+
+                        let newIndex = targetIndex;
+                        if (position === 'after' && draggedIndex < targetIndex) {
+                            newIndex = targetIndex;
+                        } else if (position === 'after' && draggedIndex > targetIndex) {
+                            newIndex = targetIndex + 1;
+                        } else if (position === 'before' && draggedIndex > targetIndex) {
+                            newIndex = targetIndex;
+                        } else if (position === 'before' && draggedIndex < targetIndex) {
+                            newIndex = targetIndex - 1;
+                        }
+
+                        newIndex = Math.max(0, Math.min(itemsCopy.length, newIndex));
+                        itemsCopy.splice(newIndex, 0, draggedItem);
+
+                        // 更新动画状态
+                        updateItemAnimations(itemsCopy);
+
+                        return itemsCopy;
+                    });
+                });
+            }, 8),
+        [dragOverInfo, updateItemAnimations, getSafeElementRect]);
+
+    // 拖动经过 - 修复版本
+    const handleDragOver = useCallback((e, itemId) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
 
-        if (draggingId === itemId) return;
+        // 存储有效的目标元素
+        const targetElement = e.currentTarget;
+        if (targetElement && targetElement.isConnected) {
+            lastValidTargetRef.current = { element: targetElement, itemId };
+        }
 
-        // 节流处理，避免过于频繁的更新
-        const now = Date.now();
-        if (now - lastUpdatedTime.current < THROTTLE_DELAY) return;
-        lastUpdatedTime.current = now;
+        // 传递事件和itemId到防抖函数
+        debouncedHandleDragOver(e, itemId);
+    }, [debouncedHandleDragOver]);
 
-        // 计算鼠标在目标元素中的位置
-        const rect = e.currentTarget.getBoundingClientRect();
-        console.log('rect',rect);
-        console.log('e.clientY', e.clientY);
-        const mouseY = e.clientY - rect.top;
-        const position = mouseY < rect.height / 2 ? 'before' : 'after';
-        console.log('position', position);
-
-        // 如果位置没变化，不更新
-        if (dragOverId === itemId && dragPosition === position) return;
-
-        setDragOverId(itemId);
-        setDragPosition(position);
-
-        // 实时更新列表顺序
-        setItems(prevItems => {
-            const itemsCopy = [...prevItems];
-            const draggedIndex = itemsCopy.findIndex(item => item.id === draggingId);
-            const targetIndex = itemsCopy.findIndex(item => item.id === itemId);
-
-            if (draggedIndex === -1 || targetIndex === -1) return prevItems;
-
-            // 如果拖动元素和目标的相对位置没变，不更新
-            const isSameRelativePosition =
-                (draggedIndex < targetIndex && position === 'after') ||
-                (draggedIndex > targetIndex && position === 'before');
-
-            if (Math.abs(draggedIndex - targetIndex) === 1 && isSameRelativePosition) {
-                return prevItems;
-            }
-
-            // 移除被拖动的元素
-            const [draggedItem] = itemsCopy.splice(draggedIndex, 1);
-
-            // 计算新的插入位置
-            let newIndex = targetIndex;
-            if (position === 'after' && draggedIndex < targetIndex) {
-                newIndex = targetIndex; // 从上往下拖，放在目标后面
-            } else if (position === 'after' && draggedIndex > targetIndex) {
-                newIndex = targetIndex + 1; // 从下往上拖，放在目标后面
-            } else if (position === 'before' && draggedIndex > targetIndex) {
-                newIndex = targetIndex; // 从下往上拖，放在目标前面
-            } else if (position === 'before' && draggedIndex < targetIndex) {
-                newIndex = targetIndex - 1; // 从上往下拖，放在目标前面
-            }
-
-            // 确保索引有效
-            newIndex = Math.max(0, Math.min(itemsCopy.length, newIndex));
-
-            // 插入到新位置
-            itemsCopy.splice(newIndex, 0, draggedItem);
-            return itemsCopy;
-        });
-    };
-
-    /**
-     * 拖动离开
-     */
-    const handleDragLeave = (e) => {
+    // 拖动离开
+    const handleDragLeave = useCallback((e) => {
         // 只有当鼠标离开当前元素且没有进入子元素时，才清除指示器
         const relatedTarget = e.relatedTarget;
-        if (!e.currentTarget.contains(relatedTarget)) {
-            setDragOverId(null);
-            setDragPosition(null);
-        }
-    };
+        const currentTarget = e.currentTarget;
 
-    /**
-     * 放置处理
-     */
-    const handleDrop = (e, targetId) => {
+        if (!currentTarget) return;
+
+        if (!currentTarget.contains(relatedTarget)) {
+            setDragOverInfo(null);
+        }
+    }, []);
+
+    // 放置处理 - 修复版本
+    const handleDrop = useCallback((e, targetId) => {
         e.preventDefault();
 
-        // 获取拖动的数据
-        const draggedId = e.dataTransfer.getData('text/plain');
+        if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current);
+        }
 
-        // 如果拖动的是同一个元素，不做处理
+        const draggedId = e.dataTransfer.getData('text/plain');
         if (!draggedId || draggedId === targetId) {
             cleanupDrag();
             return;
         }
 
-        // 列表已经在dragOver中更新过了，这里只需要同步确保正确
+        // 确保正确的最终顺序
         setItems(prevItems => {
             const itemsCopy = [...prevItems];
             const draggedIndex = itemsCopy.findIndex(item => item.id === draggedId);
             const targetIndex = itemsCopy.findIndex(item => item.id === targetId);
 
-            // 如果元素已经在新位置，直接返回
             if (draggedIndex === -1 || targetIndex === -1) return prevItems;
 
-            // 检查是否已经在正确位置
-            const expectedPosition = dragPosition === 'before' ? targetIndex - 1 : targetIndex;
-            if (draggedIndex === expectedPosition) return prevItems;
-
-            // 重新排序确保正确
             const [draggedItem] = itemsCopy.splice(draggedIndex, 1);
-            const newIndex = dragPosition === 'before' ? targetIndex - 1 : targetIndex + 1;
-            const adjustedIndex = Math.max(0, Math.min(itemsCopy.length, newIndex));
-            itemsCopy.splice(adjustedIndex, 0, draggedItem);
+
+            let newIndex = targetIndex;
+            if (dragOverInfo?.position === 'after') {
+                newIndex = draggedIndex < targetIndex ? targetIndex : targetIndex + 1;
+            } else {
+                newIndex = draggedIndex > targetIndex ? targetIndex : targetIndex - 1;
+            }
+
+            newIndex = Math.max(0, Math.min(itemsCopy.length, newIndex));
+            itemsCopy.splice(newIndex, 0, draggedItem);
+
+            // 重置所有transform
+            itemRefs.current.forEach((element) => {
+                if (element && element.isConnected) {
+                    element.style.transform = '';
+                }
+            });
 
             return itemsCopy;
         });
 
         cleanupDrag();
-    };
+    }, [dragOverInfo]);
 
-    /**
-     * 拖动结束
-     */
-    const handleDragEnd = () => {
+    // 拖动结束
+    const handleDragEnd = useCallback(() => {
         cleanupDrag();
-    };
+    }, []);
 
-    /**
-     * 清理拖拽状态
-     */
-    const cleanupDrag = () => {
-        setDraggingId(null);
-        setDragOverId(null);
-        setDragPosition(null);
-        lastUpdatedTime.current = 0;
-
-        // 移除拖拽样式
-        if (dragItemRef.current) {
-            dragItemRef.current.classList.remove('dragging');
-            dragItemRef.current = null;
+    // 清理拖拽状态
+    const cleanupDrag = useCallback(() => {
+        if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current);
+            animationFrameRef.current = null;
         }
-    };
 
-    /**
-     * 处理项目选中
-     */
-    const handleSelectItem = (itemId) => {
+        setDraggingId(null);
+        draggingIdRef.current = null;
+        setDragOverInfo(null);
+        lastValidTargetRef.current = null;
+
+        // 重置所有transform
+        itemRefs.current.forEach((element) => {
+            if (element && element.isConnected) {
+                element.style.transform = '';
+                element.classList.remove('dragging');
+            }
+        });
+    }, []);
+
+    // 阻止默认拖拽
+    const preventDrag = useCallback((e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }, []);
+
+    // 项目点击选中
+    const handleSelectItem = useCallback((itemId) => {
         setItems(prevItems =>
             prevItems.map(item => ({
                 ...item,
                 isSelected: item.id === itemId
             }))
         );
-    };
+    }, []);
 
-    /**
-     * 阻止默认拖拽行为
-     */
-    const preventDrag = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-    };
+    // 处理拖拽结束的全局事件
+    useEffect(() => {
+        const handleGlobalDragEnd = () => {
+            cleanupDrag();
+        };
+
+        // 监听全局的dragend事件，防止事件未正确触发
+        document.addEventListener('dragend', handleGlobalDragEnd);
+
+        return () => {
+            document.removeEventListener('dragend', handleGlobalDragEnd);
+        };
+    }, [cleanupDrag]);
 
     return (
         <div className="container" ref={containerRef}>
             {items.map((item) => (
                 <div
                     key={item.id}
+                    ref={(el) => setItemRef(item.id, el)}
                     className={`draggable-item ${draggingId === item.id ? 'dragging' : ''}`}
-                    // 放置区域事件
                     onDragOver={(e) => handleDragOver(e, item.id)}
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, item.id)}
                     onDragEnd={handleDragEnd}
-                    // 阻止行元素自身的拖拽
                     draggable="false"
                     onDragStart={preventDrag}
+                    style={{
+                        transition: draggingId && draggingId !== item.id
+                            ? 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                            : 'none',
+                        zIndex: draggingId === item.id ? 1000 : 1
+                    }}
                 >
                     {/* 拖拽手柄 */}
                     <div
                         className="drag-handle"
                         draggable="true"
                         onDragStart={(e) => handleDragStart(e, item.id)}
+                        onMouseDown={(e) => e.stopPropagation()} // 防止事件冒泡
                         title="拖拽排序"
                     >
                         <DragOutlined style={{ marginRight: 10 }} />
@@ -275,9 +409,12 @@ const DragMockInsert = () => {
                         <div className="node-content">{item.content}</div>
                     </div>
 
-                    {/* 动态位置指示器 */}
-                    {dragOverId === item.id && dragPosition === 'before' && (
-                        <div className="drop-indicator before" />
+                    {/* 放置位置指示器 */}
+                    {dragOverInfo?.id === item.id && dragOverInfo?.position === 'before' && (
+                        <div className="drop-indicator before show" />
+                    )}
+                    {dragOverInfo?.id === item.id && dragOverInfo?.position === 'after' && (
+                        <div className="drop-indicator after show" />
                     )}
                 </div>
             ))}
