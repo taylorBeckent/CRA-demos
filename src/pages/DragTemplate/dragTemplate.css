@@ -1,0 +1,125 @@
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 20px;
+    min-height: 120px;
+    padding: 16px;
+    background-color: white;
+    border-radius: 8px;
+    border: 2px dashed #dee2e6;
+    transition: border-color 0.3s;
+    font-size: 14px;
+}
+
+.container:hover {
+    border-color: #adb5bd;
+}
+
+.draggable-item {
+    display: flex;
+    white-space: nowrap;
+    align-items: center;
+    position: relative;
+    background-color: white;
+    border-radius: 8px;
+
+}
+
+/*.draggable-item:hover {*/
+/*    transform: translateY(-2px);*/
+/*    box-shadow: 0 4px 12px rgba(0,0,0,0.15);*/
+/*}*/
+
+/* 拖拽按钮 */
+.drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 100%;
+    /*min-height: 62px;*/
+    /*padding: 16px;*/
+    /*cursor: move;*/
+    user-select: none;
+}
+
+.drag-handle:hover {
+    opacity: 1;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.item-content {
+    /*flex: 0 0 calc(50% - 8px);*/
+    flex: 1;
+    min-height: 30px;
+    width: 90%;
+    /*width: 90%;*/
+    padding: 16px;
+    gap: 3px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+    /*box-shadow: 0 2px 8px rgba(65, 158, 254, 0.1);*/
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    background: #5657580a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /*transition: border-color 0s;*/
+}
+
+.item-content:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(65, 158, 254, 0.3);
+    /*box-shadow: 0 4px 12px rgba(0,0,0,0.15);*/
+    /*border: 1px solid rgba(65, 158, 254, 0.3);*/
+}
+
+.active {
+    border: 1px solid rgba(65, 158, 254, 0.6);
+}
+
+.drop-indicator {
+    position: absolute;
+    background-color: #419efe;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.drop-indicator.before {
+    top: -2px;
+    left: 40px;
+    right: 0;
+    height: 2px;
+}
+
+.drop-indicator.after {
+    bottom: -2px;
+    left: 40px;
+    right: 0;
+    height: 2px;
+}
+
+.node-content {
+    flex: 1 1 auto;
+    align-items: center;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    display: block;
+    padding: 4px;
+}
+
+.action-icon {
+    display: flex;
+    justify-content: flex-end;
+    /*gap: 10px;*/
+}
