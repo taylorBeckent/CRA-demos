@@ -21,7 +21,29 @@ const initialItems = [
         isHovered: false,
         isSelected: false,
         draggable: false,
-        collapse: false
+        collapse: false,
+        childNode: [
+            {
+                id: 'item-1',
+                content: '子节点1-子节点1-子节点1',
+                color: '#FF6B6B',
+                depth: 0,
+                isHovered: false,
+                isSelected: false,
+                draggable: false,
+                collapse: false
+            },
+            {
+                id: 'item-2',
+                content: '子节点2-子节点2-子节点2',
+                color: '#4ECDC4',
+                depth: 0,
+                isHovered: false,
+                isSelected: false,
+                draggable: false,
+                collapse: false
+            },
+        ]
     },
     {
         id: 'item-2',
@@ -31,7 +53,8 @@ const initialItems = [
         isHovered: false,
         isSelected: false,
         draggable: false,
-        collapse: false
+        collapse: false,
+        childNode: []
     },
     {
         id: 'item-3',
@@ -41,7 +64,8 @@ const initialItems = [
         isHovered: false,
         isSelected: false,
         draggable: false,
-        collapse: false
+        collapse: false,
+        childNode: []
     },
     {
         id: 'item-4',
@@ -51,7 +75,8 @@ const initialItems = [
         isHovered: false,
         isSelected: false,
         draggable: false,
-        collapse: false
+        collapse: false,
+        childNode: []
     },
     {
         id: 'item-5',
@@ -61,7 +86,8 @@ const initialItems = [
         isHovered: false,
         isSelected: false,
         draggable: false,
-        collapse: false
+        collapse: false,
+        childNode: []
     },
 ];
 
