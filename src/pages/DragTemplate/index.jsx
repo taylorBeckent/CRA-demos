@@ -20,7 +20,8 @@ const initialItems = [
         depth: 0,
         isHovered: false,
         isSelected: false,
-        draggable: false
+        draggable: false,
+        collapse: false
     },
     {
         id: 'item-2',
@@ -29,7 +30,8 @@ const initialItems = [
         depth: 0,
         isHovered: false,
         isSelected: false,
-        draggable: false
+        draggable: false,
+        collapse: false
     },
     {
         id: 'item-3',
@@ -38,7 +40,8 @@ const initialItems = [
         depth: 0,
         isHovered: false,
         isSelected: false,
-        draggable: false
+        draggable: false,
+        collapse: false
     },
     {
         id: 'item-4',
@@ -47,7 +50,8 @@ const initialItems = [
         depth: 0,
         isHovered: false,
         isSelected: false,
-        draggable: false
+        draggable: false,
+        collapse: false
     },
     {
         id: 'item-5',
@@ -56,7 +60,8 @@ const initialItems = [
         depth: 0,
         isHovered: false,
         isSelected: false,
-        draggable: false
+        draggable: false,
+        collapse: false
     },
 ];
 
@@ -155,7 +160,7 @@ const DragTemplate = () => {
     const handleDragLeave = e => {
         const relatedTarget = e.relatedTarget;
         console.log(relatedTarget);
-        if(!e.currentTarget.contains(relatedTarget)){
+        if (!e.currentTarget.contains(relatedTarget)) {
             setDragOverInfo(null);
         }
     };
@@ -163,8 +168,8 @@ const DragTemplate = () => {
     const handleDrop = (e, targetId) => {
         e.preventDefault();
         const draggedId = e.dataTransfer.getData('text/plain');
-        console.log('draggedId',draggedId);
-        if(!draggedId || draggedId === targetId || !dragOverInfo){
+        console.log('draggedId', draggedId);
+        if (!draggedId || draggedId === targetId || !dragOverInfo) {
             setDragOverInfo(null);
             dragItemRef.current?.classList.remove('dragging');
             dragItemRef.current = null;
@@ -173,16 +178,16 @@ const DragTemplate = () => {
 
         // 重新排序
         setDataList(prevItems => {
-            const itemsCopy = [...prevItems];
+            const itemsCopy = [ ...prevItems ];
             const draggedIndex = itemsCopy.findIndex(item => item.id === draggedId);
             const targetIndex = itemsCopy.findIndex(item => item.id == targetId);
 
-            if(draggedIndex === -1 || targetIndex === -1) return prevItems;
+            if (draggedIndex === -1 || targetIndex === -1) return prevItems;
 
-            const [draggedItem] = itemsCopy.splice(draggedIndex, 1);
+            const [ draggedItem ] = itemsCopy.splice(draggedIndex, 1);
 
             let newIndex = targetIndex;
-            if(dragOverInfo.position === 'after'){
+            if (dragOverInfo.position === 'after') {
                 newIndex = targetIndex + (draggedIndex < targetIndex ? 0 : 1);
             } else {
                 newIndex = targetIndex - (draggedIndex > targetIndex ? 0 : 1);
@@ -204,7 +209,12 @@ const DragTemplate = () => {
         setDragOverInfo(null);
         dragItemRef.current?.classList.remove('dragging');
         dragItemRef.current = null;
-    }
+    };
+
+    //. 展开折叠
+    const handleCollapse = (e) => {
+        console.log(e);
+    };
 
     return (
         <div className="container">
@@ -217,7 +227,9 @@ const DragTemplate = () => {
                     //. 放置区域事件
                     onDragOver={(e) => handleDragOver(e, item.id)}
                     onDragLeave={handleDragLeave}
-                    onDrop={(e) => {handleDrop(e, item.id)}}
+                    onDrop={(e) => {
+                        handleDrop(e, item.id)
+                    }}
                     onDragEnd={handleDragEnd}
 
                     onMouseEnter={(e) => handleMouseAction(e, item, 'mouseEnter')}
@@ -234,27 +246,35 @@ const DragTemplate = () => {
                         <DragOutlined/>
                     </div>
 
-                    <div
-                        key={`drag-api-${item.id}`}
-                        className={`item-content ${item.isSelected ? 'active' : ''}`}
-                        onClick={e => handleSelected(e, item)}
-                        draggable="false"
-                        onDragStart={preventRowDrag}
-                    >
+                    <div className="step-node-preview">
+                        <div
+                            key={`drag-api-${item.id}`}
+                            className={`item-content ${item.isSelected ? 'active' : ''}`}
+                            onClick={e => handleSelected(e, item)}
+                            draggable="false"
+                            onDragStart={preventRowDrag}
+                        >
+                            <RightOutlined style={{ fontSize: 10, marginRight: 5 }} onClick={handleCollapse}/>
+                            <span>{`${index + 1}. `}</span>
+                            <div className="node-content">{item.content}</div>
+                            <div className="action-icon">
+                                <Button type="link" icon={<LinkOutlined/>} size="small"
+                                        style={{ display: item.isHovered ? 'block' : 'none', cursor: 'pointer' }}/>
+                                <Button type="link" icon={<CopyOutlined/>} size="small"
+                                        style={{ display: item.isHovered ? 'block' : 'none', cursor: 'pointer' }}/>
+                                <Button type="link" icon={<DeleteOutlined/>} size="small"
+                                        style={{ display: item.isHovered ? 'block' : 'none', cursor: 'pointer' }}/>
+                            </div>
+                        </div>
+                        <div className="sub-step-node">
+                            <div className="case-step-box">
 
-                        <span>{`${index + 1}. `}</span>
-                        <div className="node-content">{item.content}</div>
-                        <div className="action-icon">
-                            <Button type="link" icon={<LinkOutlined/>} size="small"
-                                    style={{ display: item.isHovered ? 'block' : 'none', cursor: 'pointer' }}/>
-                            <Button type="link" icon={<CopyOutlined/>} size="small"
-                                    style={{ display: item.isHovered ? 'block' : 'none', cursor: 'pointer' }}/>
-                            <Button type="link" icon={<DeleteOutlined/>} size="small"
-                                    style={{ display: item.isHovered ? 'block' : 'none', cursor: 'pointer' }}/>
+                            </div>
                         </div>
                     </div>
+
                     {dragOverInfo?.id === item.id && (
-                        <div className={`drop-indicator ${dragOverInfo.position}`} />
+                        <div className={`drop-indicator ${dragOverInfo.position}`}/>
                     )}
                 </div>
             ))}
