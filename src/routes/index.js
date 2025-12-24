@@ -9,6 +9,7 @@ const DragIcon = lazy(() => import('../pages/DragIcon'));
 const DragSort = lazy(() => import('../pages/DragSortComponent'));
 const DragTemplate = lazy(() => import('../pages/DragTemplate'));
 const TreeHandle = lazy(() => import('../pages/TreeHandle'));
+const TreeTemplate = lazy(() => import('../pages/TreeTemplate'));
 const MainLayout = lazy(() => import('../layouts/MainLayout'));
 
 // const routes = [
@@ -69,6 +70,11 @@ const routes = [
     {
         path: '/TreeHandle',
         element: <TreeHandle/>,
+        exact: true,
+    },
+    {
+        path: '/TreeTemplate',
+        element: <TreeTemplate/>,
         exact: true,
     },
 ]

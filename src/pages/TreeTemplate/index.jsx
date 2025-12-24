@@ -9,170 +9,9 @@ import {
     DownOutlined
 } from '@ant-design/icons';
 import {Button} from "antd";
+import TreeNode from "./TreeNode";
 
-// 防抖 Hook
-const useDebounce = (callback, delay) => {
-    const callbackRef = useRef(callback);
-    const timeoutRef = useRef(null);
-
-    useEffect(() => {
-        callbackRef.current = callback;
-    }, [callback]);
-
-    return useCallback((...args) => {
-        if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
-        }
-
-        timeoutRef.current = setTimeout(() => {
-            callbackRef.current(...args);
-        }, delay);
-    }, [delay]);
-};
-
-// 树节点组件 - 递归组件
-const TreeNode = ({
-                      node,
-                      index,
-                      parentPath = '',
-                      depth = 0,
-                      onMouseAction,
-                      onSelect,
-                      onDragStart,
-                      onDragOver,
-                      onDragLeave,
-                      onDrop,
-                      onDragEnd,
-                      onCollapse,
-                      dragOverInfo
-                  }) => {
-    const nodePath = parentPath ? `${parentPath}-${index}` : `${index}`;
-
-    // 使用防抖的点击处理器
-    const handleCollapseClick = useCallback((e, nodeId) => {
-        e.stopPropagation();
-        e.preventDefault();
-        // console.log('Collapse clicked for:', nodeId);
-        onCollapse(nodeId);
-    }, [onCollapse]);
-
-    const handleSelectClick = useCallback((e) => {
-        e.stopPropagation();
-        onSelect(e, node);
-    }, [onSelect, node]);
-
-    return (
-        <div
-            key={node.id}
-            className="draggable-item"
-            draggable="false"
-            onDragStart={(e) => e.preventDefault()}
-            onDragOver={(e) => onDragOver(e, node.id, depth)}
-            onDragLeave={onDragLeave}
-            onDrop={(e) => onDrop(e, node.id, depth)}
-            onDragEnd={onDragEnd}
-            onMouseEnter={(e) => onMouseAction(e, node, 'mouseEnter')}
-            onMouseLeave={(e) => onMouseAction(e, node, 'mouseLeave')}
-        >
-            <div
-                title="拖拽排序"
-                className="drag-handle"
-                draggable="true"
-                key={node.id}
-                onDragStart={(e) => onDragStart(e, node.id, depth)}
-            >
-                <DragOutlined/>
-            </div>
-
-            <div className="step-node-preview">
-                <div
-                    className={`item-content ${node.isSelected ? 'active' : ''} ${node.childNode?.length > 0 && !node.collapse ? 'is-open' : ''}`}
-                    onClick={handleSelectClick}
-                    draggable="false"
-                    onDragStart={(e) => e.preventDefault()}
-                >
-                    {node.childNode && node.childNode.length > 0 ? (
-                        <span
-                            onClick={(e) => handleCollapseClick(e, node.id)}
-                            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                        >
-                          {node.collapse ?
-                              <RightOutlined style={{ fontSize: 12 }} /> :
-                              <DownOutlined style={{ fontSize: 12 }} />
-                          }
-                        </span>
-                    ) : (
-                        <span style={{ width: 16, display: 'inline-block' }}></span>
-                    )}
-
-                    <span>{`${index + 1}. `}</span>
-
-                    <div className="node-content">{node.content}</div>
-
-                    <div className="action-icon">
-                        <Button
-                            type="link"
-                            icon={<LinkOutlined/>}
-                            size="small"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                            }}
-                        />
-                        <Button
-                            type="link"
-                            icon={<CopyOutlined/>}
-                            size="small"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                            }}
-                        />
-                        <Button
-                            type="link"
-                            icon={<DeleteOutlined/>}
-                            size="small"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                            }}
-                        />
-                    </div>
-                </div>
-
-                {/* 递归渲染子节点 */}
-                {node.childNode && node.childNode.length > 0 && !node.collapse && (
-                    <div className="sub-step-node">
-                        <div className="case-step-box">
-                            {node.childNode.map((child, childIndex) => (
-                                <TreeNode
-                                    key={`${node.id}-child-${child.id}`}
-                                    node={child}
-                                    index={childIndex}
-                                    parentPath={nodePath}
-                                    depth={depth + 1}
-                                    onMouseAction={onMouseAction}
-                                    onSelect={onSelect}
-                                    onDragStart={onDragStart}
-                                    onDragOver={onDragOver}
-                                    onDragLeave={onDragLeave}
-                                    onDrop={onDrop}
-                                    onDragEnd={onDragEnd}
-                                    onCollapse={onCollapse}
-                                    dragOverInfo={dragOverInfo}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {dragOverInfo?.id === node.id && (
-                <div className={`drop-indicator ${dragOverInfo.position}`}/>
-            )}
-        </div>
-    );
-};
-
-// 主组件
-const DragTemplate = () => {
+const TreeTemplate = () => {
     const [ dataList, setDataList ] = useState([]);
     const [ dragOverInfo, setDragOverInfo ] = useState(null);
     const dragItemRef = useRef(null);
@@ -232,7 +71,7 @@ const DragTemplate = () => {
             return;
         }
 
-        console.log('handleCollapse called for:', itemId);
+        // console.log('handleCollapse called for:', itemId);
         isProcessingRef.current = true;
 
         setDataList(prev => {
@@ -246,7 +85,7 @@ const DragTemplate = () => {
                 }
                 return node;
             });
-            console.log('New state:', newList);
+            // console.log('New state:', newList);
             return newList;
         });
 
@@ -258,13 +97,13 @@ const DragTemplate = () => {
 
     // 或者使用更简单的版本，移除依赖
     const handleCollapseSimple = useCallback((itemId) => {
-        console.log('handleCollapseSimple called for:', itemId);
+        // console.log('handleCollapseSimple called for:', itemId);
 
         setDataList(prev => {
             const updateNode = (nodes) => {
                 return nodes.map(node => {
                     if (node.id === itemId) {
-                        console.log(`Toggling collapse for ${node.id}: ${node.collapse} -> ${!node.collapse}`);
+                        // console.log(`Toggling collapse for ${node.id}: ${node.collapse} -> ${!node.collapse}`);
                         const updatedNode = {
                             ...node,
                             collapse: !node.collapse
@@ -436,6 +275,7 @@ const DragTemplate = () => {
 
     // 拖动结束
     const handleDragEnd = useCallback(() => {
+        console.log('dragEnd')
         setDragOverInfo(null);
         dragItemRef.current?.classList.remove('dragging');
         dragItemRef.current = null;
@@ -449,14 +289,14 @@ const DragTemplate = () => {
 
     return (
         <div>
-            <div style={{ marginBottom: 20, padding: '10px 0' }}>
-                <Button onClick={resetToInitial} type="primary" size="small">
-                    重置数据
-                </Button>
-                <div style={{ fontSize: 12, color: '#666', marginTop: 5 }}>
-                    当前数据长度: {dataList.length} | 拖拽指示器: {dragOverInfo ? '显示' : '隐藏'}
-                </div>
-            </div>
+            {/*<div style={{ marginBottom: 20, padding: '10px 0' }}>*/}
+            {/*    <Button onClick={resetToInitial} type="primary" size="small">*/}
+            {/*        重置数据*/}
+            {/*    </Button>*/}
+            {/*    <div style={{ fontSize: 12, color: '#666', marginTop: 5 }}>*/}
+            {/*        当前数据长度: {dataList.length} | 拖拽指示器: {dragOverInfo ? '显示' : '隐藏'}*/}
+            {/*    </div>*/}
+            {/*</div>*/}
 
             <div className="container">
                 {dataList.map((item, index) => (
@@ -617,4 +457,5 @@ const initialItems = [
     },
 ];
 
-export default DragTemplate;
+
+export default TreeTemplate;
