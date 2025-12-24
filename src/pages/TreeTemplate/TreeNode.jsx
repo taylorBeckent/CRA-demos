@@ -24,14 +24,22 @@ const TreeNode = (props) => {
         onDrop,
         onDragEnd,
         onCollapse,
-        dragOverInfo
+        dragOverInfo,
+        onAddNode
     } = props;
 
     const DropItem = [
-        { key: 1, label: (<div>完成项目需求分析</div>) },
-        { key: 2, label: (<div>设计UI原型图</div>) },
-        { key: 3, label: (<div>前端页面开发</div>) },
-    ]
+        { key: 1, label: (<div onClick={(e)=> {handleAddClick(e,1, 0)}}>完成项目需求分析</div>) },
+        { key: 2, label: (<div onClick={(e)=> {handleAddClick(e,2,  0)}}>设计UI原型图</div>) },
+        { key: 3, label: (<div onClick={(e)=> {handleAddClick(e,3, 0)}}>前端页面开发</div>) },
+    ];
+
+    const handleAddClick = (e, nodeType, depth) => {
+        e.stopPropagation();
+        e.preventDefault();
+        console.log(node);
+        onAddNode(nodeType, node?.id, depth);
+    };
 
     const nodePath = parentPath ? `${parentPath}-${index}` : `${index}`;
 
@@ -39,7 +47,6 @@ const TreeNode = (props) => {
     const handleCollapseClick = useCallback((e, nodeId) => {
         e.stopPropagation();
         e.preventDefault();
-
         onCollapse(nodeId);
     }, [onCollapse]);
 
@@ -141,13 +148,14 @@ const TreeNode = (props) => {
                                     onDrop={onDrop}
                                     onDragEnd={onDragEnd}
                                     onCollapse={onCollapse}
+                                    onAddNode={onAddNode}
                                     dragOverInfo={dragOverInfo}
                                 />
                             ))}
                             <div className="add-step">
                                 <div style={{ width: 20, height: 36 }}></div>
                                 <Dropdown menu={{items: DropItem}} placement="top" trigger={['click']}>
-                                    <Button type="dashed">添加步骤</Button>
+                                    <Button type="dashed" >添加步骤</Button>
                                 </Dropdown>
                             </div>
                         </div>

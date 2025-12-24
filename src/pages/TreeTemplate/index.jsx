@@ -26,10 +26,16 @@ const TreeTemplate = () => {
     }, []);
 
     const DropItem = [
-        { key: 1, label: (<div>完成项目需求分析</div>) },
-        { key: 2, label: (<div>设计UI原型图</div>) },
-        { key: 3, label: (<div>前端页面开发</div>) },
+        { key: 1, label: (<div onClick={()=> {handleAddNode(1, null, 0)}}>完成项目需求分析</div>) },
+        { key: 2, label: (<div onClick={()=> {handleAddNode(2, null, 0)}}>设计UI原型图</div>) },
+        { key: 3, label: (<div onClick={()=> {handleAddNode(3, null, 0)}}>前端页面开发</div>) },
     ];
+
+    const nodeTypeMap = {
+        1: '完成项目需求分析',
+        2: '设计UI原型图',
+        3: '前端页面开发'
+    }
 
     // 更新所有节点（包括嵌套的子节点）
     const updateAllNodes = useCallback((nodes, callback) => {
@@ -60,7 +66,7 @@ const TreeTemplate = () => {
 
     //. 选中节点
     const handleSelected = useCallback((e, item) => {
-        console.log(item);
+        // console.log(item);
         setDataList(prev =>
             updateAllNodes(prev, node => ({
                 ...node,
@@ -292,9 +298,57 @@ const TreeTemplate = () => {
         return `item-${Date.now()}-${Math.random().toString(36).substr(2,9)}`
     });
 
-    const handleAddNode = () => {
+    const handleAddNode = useCallback((nodeType ,parentId, depth) => {
+        console.log('nodeType:', nodeType,'Adding node to parent:', parentId, 'depth:', depth);
+        console.log(nodeTypeMap, nodeType);
+        console.log(nodeTypeMap[nodeType])
+        const newNode = {
+            id: generateId(),
+            content: nodeTypeMap[nodeType],
+            color: '#4ECDC4',
+            depth: 0,
+            isHovered: false,
+            isSelected: false,
+            draggable: false,
+            collapse: true,
+            haveChild: nodeType === 1,
+            childNode: []
+        };
 
-    }
+        //. 如果没有parentId,说明添加的是根节点
+        if(!parentId){
+            setDataList(prev => [...prev, newNode]);
+            return;
+        }
+
+        //. 有parentId,找到父节点并添加子节点
+        const addChildToParent = (nodes) => {
+            return nodes.map(node => {
+                if(node.id === parentId){
+                    // 如果父节点没有子节点数组，先初始化
+                    const childNode = node.childNode || [];
+                    return {
+                        ...node,
+                        collapse: false, //. 添加子节点后自动展开父节点
+                        childNode: [...childNode, newNode]
+                    }
+                }
+
+                //. 递归处理子节点
+                if(node.childNode && node.childNode.length > 0){
+                    return {
+                        ...node,
+                        childNode: addChildToParent(node.childNode)
+                    }
+                }
+
+                return node;
+            })
+        }
+
+        setDataList(prev => addChildToParent(prev));
+    }, [generateId]);
+
 
     return (
         <div>
@@ -313,6 +367,7 @@ const TreeTemplate = () => {
                         onDrop={handleDrop}
                         onDragEnd={handleDragEnd}
                         onCollapse={handleCollapseSimple}  // 使用简单版本
+                        onAddNode={handleAddNode}
                         dragOverInfo={dragOverInfo}
                     />
                 ))}
