@@ -8,7 +8,7 @@ import {
     RightOutlined,
     DownOutlined
 } from '@ant-design/icons';
-import {Button} from "antd";
+import {Button, Dropdown} from "antd";
 
 const TreeNode = (props) => {
     const {
@@ -26,6 +26,12 @@ const TreeNode = (props) => {
         onCollapse,
         dragOverInfo
     } = props;
+
+    const DropItem = [
+        { key: 1, label: (<div>完成项目需求分析</div>) },
+        { key: 2, label: (<div>设计UI原型图</div>) },
+        { key: 3, label: (<div>前端页面开发</div>) },
+    ]
 
     const nodePath = parentPath ? `${parentPath}-${index}` : `${index}`;
 
@@ -84,7 +90,7 @@ const TreeNode = (props) => {
                         <span style={{ width: 16, display: 'inline-block' }}></span>
                     )}
 
-                    <span>{`${index + 1}. `}</span>
+                    {/*<span>{`${index + 1}. `}</span>*/}
 
                     <div className="node-content">{node.content}</div>
 
@@ -118,7 +124,7 @@ const TreeNode = (props) => {
 
                 {/* 递归渲染子节点 */}
                 {node.childNode && node.childNode.length > 0 && !node.collapse && (
-                    <div className="sub-step-node">
+                    <div className={`sub-step-node ${node.isSelected ? 'active' : ''}`}>
                         <div className="case-step-box">
                             {node.childNode.map((child, childIndex) => (
                                 <TreeNode
@@ -138,6 +144,12 @@ const TreeNode = (props) => {
                                     dragOverInfo={dragOverInfo}
                                 />
                             ))}
+                            <div className="add-step">
+                                <div style={{ width: 20, height: 36 }}></div>
+                                <Dropdown menu={{items: DropItem}} placement="top" trigger={['click']}>
+                                    <Button type="dashed">添加步骤</Button>
+                                </Dropdown>
+                            </div>
                         </div>
                     </div>
                 )}

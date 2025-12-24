@@ -1,9 +1,10 @@
 /* dragTemplate.css */
 .container {
+    width: 32%;
     display: flex;
     flex-wrap: wrap;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
     margin-top: 20px;
     min-height: 120px;
     padding: 16px;
@@ -34,14 +35,19 @@
     align-items: center;
     justify-content: center;
     width: 20px;
-    min-height: 64px;
+    /*min-height: 64px;*/
+    min-height: 36px;
     user-select: none;
     opacity: 0;
     transition: opacity 0.3s ease;
     cursor: move;
 }
 
-.draggable-item:hover .drag-handle {
+.draggable-item:hover > .drag-handle {
+    opacity: 1;
+}
+
+.draggable-item .draggable-item:hover > .drag-handle {
     opacity: 1;
 }
 
@@ -63,9 +69,11 @@
 }
 
 .item-content {
-    min-height: 30px;
+    min-height: 34px;
     /*width: 100%;*/
-    padding: 16px;
+    /*padding: 16px;*/
+    padding-right: 10px;
+    padding-left: 10px;
     gap: 3px;
     border-radius: 8px;
     cursor: pointer;
@@ -117,7 +125,7 @@
 
 /* 节点内容 */
 .node-content {
-    flex: 1 1 auto;
+    /*flex: 1 1 auto;*/
     margin: 0 12px;
     overflow: hidden;
     white-space: nowrap;
@@ -130,15 +138,21 @@
 
 /* 操作图标 */
 .action-icon {
-    display: flex;
+    /*display: flex;*/
+    /*justify-content: flex-end;*/
+    /*white-space:nowrap;*/
+    display: none;
     justify-content: flex-end;
-    gap: 4px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
+
+    transition: all 0.3s ease;
 }
 
-.item-content:hover .action-icon {
-    opacity: 1;
+.item-content:hover > .action-icon {
+    display: flex;
+
+    white-space:nowrap;
+    /*position: absolute;*/
+    /*right: 10px;*/
 }
 
 .action-icon .ant-btn {
@@ -180,7 +194,7 @@
 .case-step-box {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
     position: relative;
 }
 
@@ -265,6 +279,23 @@
     background: rgba(86, 87, 88, 0.02);
     margin-top: -1px;
     padding: 16px;
+}
+
+.step-node-preview .item-content.is-open + .sub-step-node.active {
+    border: 1px solid rgba(65, 158, 254, 0.6);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(65, 158, 254, 0.1);
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    /*background: rgba(65, 158, 254, 0.05);*/
+}
+
+.add-step {
+    display: flex;
+}
+
+.add-step > .ant-btn {
+    flex: 1;
 }
 
 /* 响应式调整 */

@@ -8,7 +8,7 @@ import {
     RightOutlined,
     DownOutlined
 } from '@ant-design/icons';
-import {Button} from "antd";
+import {Button, Dropdown} from "antd";
 import TreeNode from "./TreeNode";
 
 const TreeTemplate = () => {
@@ -24,6 +24,12 @@ const TreeTemplate = () => {
     useEffect(() => {
         setDataList(initialItems);
     }, []);
+
+    const DropItem = [
+        { key: 1, label: (<div>完成项目需求分析</div>) },
+        { key: 2, label: (<div>设计UI原型图</div>) },
+        { key: 3, label: (<div>前端页面开发</div>) },
+    ]
 
     // 更新所有节点（包括嵌套的子节点）
     const updateAllNodes = useCallback((nodes, callback) => {
@@ -50,7 +56,7 @@ const TreeTemplate = () => {
                 return node;
             })
         );
-    }, [updateAllNodes]);
+    }, [ updateAllNodes ]);
 
     //. 选中节点
     const handleSelected = useCallback((e, item) => {
@@ -61,7 +67,7 @@ const TreeTemplate = () => {
                 isSelected: node.id === item.id
             }))
         );
-    }, [updateAllNodes]);
+    }, [ updateAllNodes ]);
 
     //. 展开/折叠 - 使用防抖避免重复执行
     const handleCollapse = useCallback((itemId) => {
@@ -93,7 +99,7 @@ const TreeTemplate = () => {
         setTimeout(() => {
             isProcessingRef.current = false;
         }, 100);
-    }, [updateAllNodes]);
+    }, [ updateAllNodes ]);
 
     // 或者使用更简单的版本，移除依赖
     const handleCollapseSimple = useCallback((itemId) => {
@@ -186,7 +192,7 @@ const TreeTemplate = () => {
         const position = mouseY < rect.height / 2 ? 'before' : 'after';
 
         setDragOverInfo({ id: itemId, position, depth });
-    }, [dragOverInfo]);
+    }, [ dragOverInfo ]);
 
     const handleDragLeave = useCallback(e => {
         const relatedTarget = e.relatedTarget;
@@ -256,6 +262,7 @@ const TreeTemplate = () => {
             );
 
             if (!inserted) {
+                console.log(findNodeAndParent(itemsCopy, targetId));
                 // 如果插入失败，回退到原始位置
                 const { node: targetNode, parent, index } = findNodeAndParent(itemsCopy, targetId);
                 if (parent) {
@@ -271,7 +278,7 @@ const TreeTemplate = () => {
         setDragOverInfo(null);
         dragItemRef.current?.classList.remove('dragging');
         dragItemRef.current = null;
-    }, [dragOverInfo]);
+    }, [ dragOverInfo ]);
 
     // 拖动结束
     const handleDragEnd = useCallback(() => {
@@ -281,23 +288,8 @@ const TreeTemplate = () => {
         dragItemRef.current = null;
     }, []);
 
-    // 添加一个重置函数用于测试
-    const resetToInitial = useCallback(() => {
-        // console.log('Resetting to initial state');
-        setDataList(JSON.parse(JSON.stringify(initialItems)));
-    }, []);
-
     return (
         <div>
-            {/*<div style={{ marginBottom: 20, padding: '10px 0' }}>*/}
-            {/*    <Button onClick={resetToInitial} type="primary" size="small">*/}
-            {/*        重置数据*/}
-            {/*    </Button>*/}
-            {/*    <div style={{ fontSize: 12, color: '#666', marginTop: 5 }}>*/}
-            {/*        当前数据长度: {dataList.length} | 拖拽指示器: {dragOverInfo ? '显示' : '隐藏'}*/}
-            {/*    </div>*/}
-            {/*</div>*/}
-
             <div className="container">
                 {dataList.map((item, index) => (
                     <TreeNode
@@ -316,6 +308,12 @@ const TreeTemplate = () => {
                         dragOverInfo={dragOverInfo}
                     />
                 ))}
+                <div className="add-step">
+                    <div style={{ width: 20, height: 36 }}></div>
+                    <Dropdown menu={{items: DropItem}} placement="top" trigger={['click']}>
+                        <Button type="dashed">添加步骤</Button>
+                    </Dropdown>
+                </div>
             </div>
         </div>
     );
