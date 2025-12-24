@@ -71,12 +71,12 @@ const TreeNode = (props) => {
 
             <div className="step-node-preview">
                 <div
-                    className={`item-content ${node.isSelected ? 'active' : ''} ${node.childNode?.length > 0 && !node.collapse ? 'is-open' : ''}`}
+                    className={`item-content ${node.isSelected ? 'active' : ''} ${node.haveChild && !node.collapse ? 'is-open' : ''}`}
                     onClick={handleSelectClick}
                     draggable="false"
                     onDragStart={(e) => e.preventDefault()}
                 >
-                    {node.childNode && node.childNode.length > 0 ? (
+                    {node.childNode && node.haveChild ? (
                         <span
                             onClick={(e) => handleCollapseClick(e, node.id)}
                             style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
@@ -123,7 +123,7 @@ const TreeNode = (props) => {
                 </div>
 
                 {/* 递归渲染子节点 */}
-                {node.childNode && node.childNode.length > 0 && !node.collapse && (
+                {node.childNode && node.haveChild && !node.collapse && (
                     <div className={`sub-step-node ${node.isSelected ? 'active' : ''}`}>
                         <div className="case-step-box">
                             {node.childNode.map((child, childIndex) => (

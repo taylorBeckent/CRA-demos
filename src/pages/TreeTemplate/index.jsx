@@ -29,7 +29,7 @@ const TreeTemplate = () => {
         { key: 1, label: (<div>完成项目需求分析</div>) },
         { key: 2, label: (<div>设计UI原型图</div>) },
         { key: 3, label: (<div>前端页面开发</div>) },
-    ]
+    ];
 
     // 更新所有节点（包括嵌套的子节点）
     const updateAllNodes = useCallback((nodes, callback) => {
@@ -288,6 +288,14 @@ const TreeTemplate = () => {
         dragItemRef.current = null;
     }, []);
 
+    const generateId = useCallback(() => {
+        return `item-${Date.now()}-${Math.random().toString(36).substr(2,9)}`
+    });
+
+    const handleAddNode = () => {
+
+    }
+
     return (
         <div>
             <div className="container">
@@ -330,6 +338,7 @@ const initialItems = [
         isSelected: false,
         draggable: false,
         collapse: true, // 初始为折叠状态
+        haveChild: true, //. 是否有子节点
         childNode: [
             {
                 id: 'item-1-1',
@@ -340,6 +349,7 @@ const initialItems = [
                 isSelected: false,
                 draggable: false,
                 collapse: true, // 初始为折叠状态
+                haveChild: true, //. 是否有子节点
                 childNode: [
                     {
                         id: 'item-1-1-1',
@@ -349,7 +359,8 @@ const initialItems = [
                         isHovered: false,
                         isSelected: false,
                         draggable: false,
-                        collapse: true
+                        collapse: true,
+                        haveChild: false,
                     },
                     {
                         id: 'item-1-1-2',
@@ -359,7 +370,8 @@ const initialItems = [
                         isHovered: false,
                         isSelected: false,
                         draggable: false,
-                        collapse: true
+                        collapse: true,
+                        haveChild: false,
                     }
                 ]
             },
@@ -372,6 +384,7 @@ const initialItems = [
                 isSelected: false,
                 draggable: false,
                 collapse: true, // 初始为折叠状态
+                haveChild: true,
                 childNode: [
                     {
                         id: 'item-1-2-1',
@@ -381,7 +394,8 @@ const initialItems = [
                         isHovered: false,
                         isSelected: false,
                         draggable: false,
-                        collapse: true
+                        collapse: true,
+                        haveChild: false,
                     },
                     {
                         id: 'item-1-2-2',
@@ -391,7 +405,8 @@ const initialItems = [
                         isHovered: false,
                         isSelected: false,
                         draggable: false,
-                        collapse: true
+                        collapse: true,
+                        haveChild: false,
                     }
                 ]
             },
@@ -406,6 +421,7 @@ const initialItems = [
         isSelected: false,
         draggable: false,
         collapse: true,
+        haveChild: false,
         childNode: []
     },
     {
@@ -417,6 +433,7 @@ const initialItems = [
         isSelected: false,
         draggable: false,
         collapse: true,
+        haveChild: true,
         childNode: [
             {
                 id: 'item-3-1',
@@ -440,6 +457,7 @@ const initialItems = [
         isSelected: false,
         draggable: false,
         collapse: true,
+        haveChild: false,
         childNode: []
     },
     {
@@ -451,6 +469,7 @@ const initialItems = [
         isSelected: false,
         draggable: false,
         collapse: true,
+        haveChild: true,
         childNode: []
     },
 ];
