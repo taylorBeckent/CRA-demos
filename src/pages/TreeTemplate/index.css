@@ -37,7 +37,6 @@
     align-items: center;
     justify-content: center;
     width: 20px;
-    /*min-height: 64px;*/
     min-height: 36px;
     user-select: none;
     opacity: 0;
@@ -72,8 +71,6 @@
 
 .item-content {
     min-height: 34px;
-    /*width: 100%;*/
-    /*padding: 16px;*/
     padding-right: 10px;
     padding-left: 10px;
     gap: 3px;
@@ -118,16 +115,8 @@
     transform: scale(1.1);
 }
 
-/* 节点序号 */
-.item-content > span:nth-of-type(2) {
-    min-width: 30px;
-    font-weight: 500;
-    color: #8c8c8c;
-}
-
 /* 节点内容 */
 .node-content {
-    /*flex: 1 1 auto;*/
     margin: 0 12px;
     overflow: hidden;
     white-space: nowrap;
@@ -140,21 +129,14 @@
 
 /* 操作图标 */
 .action-icon {
-    /*display: flex;*/
-    /*justify-content: flex-end;*/
-    /*white-space:nowrap;*/
     display: none;
     justify-content: flex-end;
-
     transition: all 0.3s ease;
 }
 
 .item-content:hover > .action-icon {
     display: flex;
-
     white-space:nowrap;
-    /*position: absolute;*/
-    /*right: 10px;*/
 }
 
 .action-icon .ant-btn {
@@ -241,19 +223,20 @@
     background-color: #419efe;
     z-index: 10;
     pointer-events: none;
-    border-radius: 1px;
+    border-radius: 2px;
     left: 40px;
     right: 0;
-    height: 2px;
+    height: 3px;
     animation: pulse 0.5s infinite alternate;
+    box-shadow: 0 0 5px rgba(65, 158, 254, 0.5);
 }
 
 .drop-indicator.before {
-    top: -2px;
+    top: -1px;
 }
 
 .drop-indicator.after {
-    bottom: -2px;
+    bottom: -1px;
 }
 
 @keyframes pulse {
@@ -289,7 +272,6 @@
     box-shadow: 0 4px 12px rgba(65, 158, 254, 0.1);
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
-    /*background: rgba(65, 158, 254, 0.05);*/
 }
 
 .add-step {
@@ -298,6 +280,16 @@
 
 .add-step > .ant-btn {
     flex: 1;
+}
+
+/* 不允许拖放的视觉反馈 */
+.draggable-item.no-drop .drag-handle {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.draggable-item.no-drop .drag-handle:hover {
+    opacity: 0.3 !important;
 }
 
 /* 响应式调整 */

@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useCallback, useRef, useMemo} from 'react';
+import React, {useCallback} from 'react';
 import './index.css';
 import {
     LinkOutlined,
@@ -29,15 +29,14 @@ const TreeNode = (props) => {
     } = props;
 
     const DropItem = [
-        { key: 1, label: (<div onClick={(e)=> {handleAddClick(e,1, 0)}}>完成项目需求分析</div>) },
-        { key: 2, label: (<div onClick={(e)=> {handleAddClick(e,2,  0)}}>设计UI原型图</div>) },
-        { key: 3, label: (<div onClick={(e)=> {handleAddClick(e,3, 0)}}>前端页面开发</div>) },
+        { key: 1, label: (<div onClick={(e)=> {handleAddClick(e,1, depth)}}>完成项目需求分析</div>) },
+        { key: 2, label: (<div onClick={(e)=> {handleAddClick(e,2, depth)}}>设计UI原型图</div>) },
+        { key: 3, label: (<div onClick={(e)=> {handleAddClick(e,3, depth)}}>前端页面开发</div>) },
     ];
 
     const handleAddClick = (e, nodeType, depth) => {
         e.stopPropagation();
         e.preventDefault();
-        console.log(node);
         onAddNode(nodeType, node?.id, depth);
     };
 
@@ -55,14 +54,32 @@ const TreeNode = (props) => {
         onSelect(e, node);
     }, [onSelect, node]);
 
+    // 局部事件处理函数
+    const handleLocalDragStart = useCallback((e) => {
+        e.stopPropagation();
+        onDragStart(e, node.id, depth);
+    }, [node.id, depth, onDragStart]);
+
+    const handleLocalDragOver = useCallback((e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onDragOver(e, node.id, depth);
+    }, [node.id, depth, onDragOver]);
+
+    const handleLocalDrop = useCallback((e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onDrop(e, node.id, depth);
+    }, [node.id, depth, onDrop]);
+
     return (
         <div
             className="draggable-item"
             draggable="false"
             onDragStart={(e) => e.preventDefault()}
-            onDragOver={(e) => onDragOver(e, node.id, depth)}
+            onDragOver={handleLocalDragOver}
             onDragLeave={onDragLeave}
-            onDrop={(e) => onDrop(e, node.id, depth)}
+            onDrop={handleLocalDrop}
             onDragEnd={onDragEnd}
             onMouseEnter={(e) => onMouseAction(e, node, 'mouseEnter')}
             onMouseLeave={(e) => onMouseAction(e, node, 'mouseLeave')}
@@ -71,7 +88,7 @@ const TreeNode = (props) => {
                 title="拖拽排序"
                 className="drag-handle"
                 draggable="true"
-                onDragStart={(e) => onDragStart(e, node.id, depth)}
+                onDragStart={handleLocalDragStart}
             >
                 <DragOutlined/>
             </div>
@@ -96,8 +113,6 @@ const TreeNode = (props) => {
                     ) : (
                         <span style={{ width: 16, display: 'inline-block' }}></span>
                     )}
-
-                    {/*<span>{`${index + 1}. `}</span>*/}
 
                     <div className="node-content">{node.content}</div>
 
@@ -149,7 +164,7 @@ const TreeNode = (props) => {
                                     onDragEnd={onDragEnd}
                                     onCollapse={onCollapse}
                                     onAddNode={onAddNode}
-                                    dragOverInfo={dragOverInfo}
+                                    dragOverInfo={dragOverInfo} // 确保传递 dragOverInfo
                                 />
                             ))}
                             <div className="add-step">

@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useCallback, useRef, useMemo} from 'react';
+import React, {useState, useEffect, useCallback, useRef} from 'react';
 import './index.css';
 import {
     LinkOutlined,
@@ -16,10 +16,6 @@ const TreeTemplate = () => {
     const [ dragOverInfo, setDragOverInfo ] = useState(null);
     const dragItemRef = useRef(null);
     const dragDataRef = useRef(null);
-
-    // 用于防抖的引用
-    const isProcessingRef = useRef(false);
-    const pendingUpdateRef = useRef(null);
 
     useEffect(() => {
         setDataList(initialItems);
@@ -39,7 +35,6 @@ const TreeTemplate = () => {
 
     // 更新所有节点（包括嵌套的子节点）
     const updateAllNodes = useCallback((nodes, callback) => {
-        // console.log(nodes,callback);
         return nodes.map(node => {
             const updatedNode = callback(node);
             if (updatedNode.childNode && updatedNode.childNode.length > 0) {
@@ -66,7 +61,6 @@ const TreeTemplate = () => {
 
     //. 选中节点
     const handleSelected = useCallback((e, item) => {
-        // console.log(item);
         setDataList(prev =>
             updateAllNodes(prev, node => ({
                 ...node,
@@ -75,47 +69,12 @@ const TreeTemplate = () => {
         );
     }, [ updateAllNodes ]);
 
-    //. 展开/折叠 - 使用防抖避免重复执行
-    const handleCollapse = useCallback((itemId) => {
-        // 如果正在处理中，忽略此次调用
-        if (isProcessingRef.current) {
-            // console.log('忽略重复调用:', itemId);
-            return;
-        }
-
-        // console.log('handleCollapse called for:', itemId);
-        isProcessingRef.current = true;
-
-        setDataList(prev => {
-            const newList = updateAllNodes(prev, node => {
-                if (node.id === itemId) {
-                    console.log(`Toggling collapse for ${node.id}: ${node.collapse} -> ${!node.collapse}`);
-                    return {
-                        ...node,
-                        collapse: !node.collapse
-                    };
-                }
-                return node;
-            });
-            // console.log('New state:', newList);
-            return newList;
-        });
-
-        // 100ms后重置处理状态
-        setTimeout(() => {
-            isProcessingRef.current = false;
-        }, 100);
-    }, [ updateAllNodes ]);
-
-    // 或者使用更简单的版本，移除依赖
+    //. 展开/折叠
     const handleCollapseSimple = useCallback((itemId) => {
-        // console.log('handleCollapseSimple called for:', itemId);
-
         setDataList(prev => {
             const updateNode = (nodes) => {
                 return nodes.map(node => {
                     if (node.id === itemId) {
-                        // console.log(`Toggling collapse for ${node.id}: ${node.collapse} -> ${!node.collapse}`);
                         const updatedNode = {
                             ...node,
                             collapse: !node.collapse
@@ -125,7 +84,6 @@ const TreeTemplate = () => {
                         }
                         return updatedNode;
                     }
-                    // 检查子节点
                     if (node.childNode && node.childNode.length > 0) {
                         const updatedChildNode = updateNode(node.childNode);
                         if (updatedChildNode !== node.childNode) {
@@ -159,14 +117,22 @@ const TreeTemplate = () => {
         return null;
     };
 
-    //. 拖动起始
+    //. 拖动起始 - 记录父节点信息
     const handleDragStart = useCallback((e, itemId, depth) => {
         e.stopPropagation();
         const draggableItem = e.currentTarget.closest('.draggable-item');
         if (!draggableItem) return;
 
+        // 查找拖动节点的父节点信息
+        const draggedInfo = findNodeAndParent(dataList, itemId);
+        const parentId = draggedInfo?.parent ? draggedInfo.parent.id : null;
+
         dragItemRef.current = draggableItem;
-        dragDataRef.current = { itemId, depth };
+        dragDataRef.current = {
+            itemId,
+            depth,
+            parentId // 记录父节点ID
+        };
 
         e.dataTransfer.setData('text/plain', itemId);
         e.dataTransfer.effectAllowed = 'move';
@@ -184,21 +150,62 @@ const TreeTemplate = () => {
         setTimeout(() => {
             document.body.removeChild(dragImage);
         }, 0);
-    }, []);
+    }, [dataList]);
 
-    //. 放置目标处理
+    //. 放置目标处理 - 检查是否在同一父节点下
     const handleDragOver = useCallback((e, itemId, depth) => {
         e.preventDefault();
+
+        // 检查是否有拖动数据
+        if (!dragDataRef.current) {
+            e.dataTransfer.dropEffect = 'none';
+            return;
+        }
+
+        const { itemId: draggedId, depth: draggedDepth, parentId: draggedParentId } = dragDataRef.current;
+
+        // 如果是同一个节点，不允许拖放
+        if (draggedId === itemId) {
+            e.dataTransfer.dropEffect = 'none';
+            setDragOverInfo(null);
+            return;
+        }
+
+        // 查找目标节点的父节点信息
+        const targetInfo = findNodeAndParent(dataList, itemId);
+        const targetParentId = targetInfo?.parent ? targetInfo.parent.id : null;
+
+        // 检查是否允许拖放：深度相同且父节点相同
+        let canDrop = false;
+
+        // 情况1: 都是根节点（parentId 都为 null）
+        if (draggedDepth === 0 && depth === 0 && draggedParentId === null && targetParentId === null) {
+            canDrop = true;
+        }
+        // 情况2: 都是子节点且父节点相同
+        else if (draggedDepth > 0 && depth > 0 && draggedParentId === targetParentId) {
+            canDrop = true;
+        }
+
+        if (!canDrop) {
+            e.dataTransfer.dropEffect = 'none';
+            setDragOverInfo(null);
+            return;
+        }
+
         e.dataTransfer.dropEffect = 'move';
 
-        if (dragOverInfo?.id === itemId) return;
+        // 如果 dragOverInfo 已经设置且相同，直接返回
+        if (dragOverInfo?.id === itemId && dragOverInfo?.position) {
+            return;
+        }
 
         const rect = e.currentTarget.getBoundingClientRect();
         const mouseY = e.clientY - rect.top;
         const position = mouseY < rect.height / 2 ? 'before' : 'after';
 
         setDragOverInfo({ id: itemId, position, depth });
-    }, [ dragOverInfo ]);
+    }, [dragOverInfo, dataList]);
 
     const handleDragLeave = useCallback(e => {
         const relatedTarget = e.relatedTarget;
@@ -207,101 +214,157 @@ const TreeTemplate = () => {
         }
     }, []);
 
-    // 删除节点
-    const removeNode = (nodes, id) => {
+    // 清理拖动状态
+    const cleanUpDrag = useCallback(() => {
+        setDragOverInfo(null);
+        if (dragItemRef.current) {
+            dragItemRef.current.classList.remove('dragging');
+        }
+        dragItemRef.current = null;
+        dragDataRef.current = null;
+    }, []);
+
+    // 从数组中删除指定节点
+    const removeNodeFromArray = (nodes, id) => {
         for (let i = 0; i < nodes.length; i++) {
             if (nodes[i].id === id) {
                 return nodes.splice(i, 1)[0];
             }
             if (nodes[i].childNode && nodes[i].childNode.length > 0) {
-                const removed = removeNode(nodes[i].childNode, id);
+                const removed = removeNodeFromArray(nodes[i].childNode, id);
                 if (removed) return removed;
             }
         }
         return null;
     };
 
-    // 插入节点
-    const insertNode = (nodes, node, targetId, position, depth) => {
-        for (let i = 0; i < nodes.length; i++) {
-            if (nodes[i].id === targetId) {
-                let insertIndex = i;
-                if (position === 'after') {
-                    insertIndex = i + 1;
-                }
-                nodes.splice(insertIndex, 0, node);
-                return true;
-            }
-            if (nodes[i].childNode && nodes[i].childNode.length > 0) {
-                const inserted = insertNode(nodes[i].childNode, node, targetId, position, depth - 1);
-                if (inserted) return true;
-            }
-        }
-        return false;
-    };
-
+    //. 放置处理 - 确保在同一父节点下拖动
     const handleDrop = useCallback((e, targetId, depth) => {
         e.preventDefault();
+        e.stopPropagation();
+
         const draggedId = e.dataTransfer.getData('text/plain');
-        console.log(draggedId, targetId, dragOverInfo)
-        if (!draggedId || draggedId === targetId || !dragOverInfo) {
-            setDragOverInfo(null);
-            dragItemRef.current?.classList.remove('dragging');
-            dragItemRef.current = null;
+        if (!draggedId || draggedId === targetId || !dragOverInfo || !dragDataRef.current) {
+            cleanUpDrag();
+            return;
+        }
+
+        const { depth: draggedDepth, parentId: draggedParentId } = dragDataRef.current;
+
+        // 检查是否允许拖放
+        let canDrop = false;
+
+        // 情况1: 都是根节点
+        if (draggedDepth === 0 && depth === 0 && draggedParentId === null) {
+            canDrop = true;
+        }
+        // 情况2: 都是子节点且父节点相同
+        else if (draggedDepth > 0 && depth > 0 && draggedParentId) {
+            const targetInfo = findNodeAndParent(dataList, targetId);
+            const targetParentId = targetInfo?.parent ? targetInfo.parent.id : null;
+            canDrop = draggedParentId === targetParentId;
+        }
+
+        if (!canDrop) {
+            console.log('不允许跨父节点拖动');
+            cleanUpDrag();
             return;
         }
 
         setDataList(prev => {
             const itemsCopy = JSON.parse(JSON.stringify(prev));
 
-            // 移除被拖动的节点
-            const draggedNode = removeNode(itemsCopy, draggedId);
-            if (!draggedNode) return prev;
+            // 查找拖动节点和目标节点信息（在副本中查找）
+            const draggedInfo = findNodeAndParent(itemsCopy, draggedId);
+            const targetInfo = findNodeAndParent(itemsCopy, targetId);
 
-            // 插入到目标位置
-            const inserted = insertNode(
-                itemsCopy,
-                draggedNode,
-                targetId,
-                dragOverInfo.position,
-                depth
-            );
+            if (!draggedInfo || !targetInfo) {
+                console.log('未找到节点信息');
+                return prev;
+            }
 
-            if (!inserted) {
-                console.log(findNodeAndParent(itemsCopy, targetId));
-                // 如果插入失败，回退到原始位置
-                const { node: targetNode, parent, index } = findNodeAndParent(itemsCopy, targetId);
-                if (parent) {
-                    parent.childNode.splice(index, 0, draggedNode);
-                } else {
-                    itemsCopy.splice(index, 0, draggedNode);
+            // 确定父节点数组
+            let parentArray;
+            if (draggedDepth === 0) {
+                // 根节点，父数组就是根数组
+                parentArray = itemsCopy;
+            } else {
+                // 子节点，找到父节点
+                const parentNode = findNodeAndParent(itemsCopy, draggedParentId)?.node;
+                if (!parentNode) {
+                    console.log('未找到父节点');
+                    return itemsCopy;
+                }
+                parentArray = parentNode.childNode;
+            }
+
+            // 从父数组中移除拖动节点
+            const removedNode = removeNodeFromArray(parentArray, draggedId);
+            if (!removedNode) {
+                console.log('移除节点失败');
+                return itemsCopy;
+            }
+
+            // 获取目标节点在父数组中的索引
+            let targetIndex = -1;
+            for (let i = 0; i < parentArray.length; i++) {
+                if (parentArray[i].id === targetId) {
+                    targetIndex = i;
+                    break;
                 }
             }
-            console.log(itemsCopy);
+
+            if (targetIndex === -1) {
+                console.log('未找到目标节点在父数组中的位置');
+                // 回退：将移除的节点放回原位置
+                if (draggedInfo.index !== undefined) {
+                    parentArray.splice(draggedInfo.index, 0, removedNode);
+                }
+                return itemsCopy;
+            }
+
+            // 计算插入位置
+            let insertIndex;
+
+            // 如果拖动节点在目标节点之前，并且要拖动到目标节点之后
+            if (draggedInfo.index < targetIndex && dragOverInfo.position === 'after') {
+                insertIndex = targetIndex; // 因为已经移除了拖动节点，所以目标索引不变
+            }
+            // 如果拖动节点在目标节点之后，并且要拖动到目标节点之前
+            else if (draggedInfo.index > targetIndex && dragOverInfo.position === 'before') {
+                insertIndex = targetIndex;
+            }
+            // 如果拖动到目标节点之前
+            else if (dragOverInfo.position === 'before') {
+                insertIndex = targetIndex;
+            }
+            // 如果拖动到目标节点之后
+            else {
+                insertIndex = targetIndex + 1;
+            }
+
+            // 确保 insertIndex 在有效范围内
+            insertIndex = Math.max(0, Math.min(insertIndex, parentArray.length));
+
+            // 插入节点
+            parentArray.splice(insertIndex, 0, removedNode);
+
             return itemsCopy;
         });
 
-        setDragOverInfo(null);
-        dragItemRef.current?.classList.remove('dragging');
-        dragItemRef.current = null;
-    }, [ dragOverInfo ]);
+        cleanUpDrag();
+    }, [dragOverInfo, dataList, cleanUpDrag]);
 
     // 拖动结束
     const handleDragEnd = useCallback(() => {
-        console.log('dragEnd')
-        setDragOverInfo(null);
-        dragItemRef.current?.classList.remove('dragging');
-        dragItemRef.current = null;
-    }, []);
+        cleanUpDrag();
+    }, [cleanUpDrag]);
 
     const generateId = useCallback(() => {
         return `item-${Date.now()}-${Math.random().toString(36).substr(2,9)}`
-    });
+    }, []);
 
     const handleAddNode = useCallback((nodeType ,parentId, depth) => {
-        console.log('nodeType:', nodeType,'Adding node to parent:', parentId, 'depth:', depth);
-        console.log(nodeTypeMap, nodeType);
-        console.log(nodeTypeMap[nodeType])
         const newNode = {
             id: generateId(),
             content: nodeTypeMap[nodeType],
@@ -334,7 +397,6 @@ const TreeTemplate = () => {
                     }
                 }
 
-                //. 递归处理子节点
                 if(node.childNode && node.childNode.length > 0){
                     return {
                         ...node,
@@ -348,7 +410,6 @@ const TreeTemplate = () => {
 
         setDataList(prev => addChildToParent(prev));
     }, [generateId]);
-
 
     return (
         <div>
@@ -366,7 +427,7 @@ const TreeTemplate = () => {
                         onDragLeave={handleDragLeave}
                         onDrop={handleDrop}
                         onDragEnd={handleDragEnd}
-                        onCollapse={handleCollapseSimple}  // 使用简单版本
+                        onCollapse={handleCollapseSimple}
                         onAddNode={handleAddNode}
                         dragOverInfo={dragOverInfo}
                     />
@@ -382,7 +443,7 @@ const TreeTemplate = () => {
     );
 };
 
-// 初始数据 - 修正：初始 collapse 为 true，id 确保唯一
+// 初始数据
 const initialItems = [
     {
         id: 'item-1',
@@ -392,8 +453,8 @@ const initialItems = [
         isHovered: false,
         isSelected: false,
         draggable: false,
-        collapse: true, // 初始为折叠状态
-        haveChild: true, //. 是否有子节点
+        collapse: true,
+        haveChild: true,
         childNode: [
             {
                 id: 'item-1-1',
@@ -403,8 +464,8 @@ const initialItems = [
                 isHovered: false,
                 isSelected: false,
                 draggable: false,
-                collapse: true, // 初始为折叠状态
-                haveChild: true, //. 是否有子节点
+                collapse: true,
+                haveChild: true,
                 childNode: [
                     {
                         id: 'item-1-1-1',
@@ -438,7 +499,7 @@ const initialItems = [
                 isHovered: false,
                 isSelected: false,
                 draggable: false,
-                collapse: true, // 初始为折叠状态
+                collapse: true,
                 haveChild: true,
                 childNode: [
                     {
@@ -528,6 +589,5 @@ const initialItems = [
         childNode: []
     },
 ];
-
 
 export default TreeTemplate;
