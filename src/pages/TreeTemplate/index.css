@@ -1,18 +1,20 @@
 /* dragTemplate.css */
 .container {
     width: 32%;
+    height: 600px;
+    min-height: 120px;
     display: flex;
-    flex-wrap: wrap;
+    /*flex-wrap: wrap;*/
     flex-direction: column;
     gap: 12px;
     margin-top: 20px;
-    min-height: 120px;
     padding: 16px;
     background-color: white;
     border-radius: 8px;
     border: 2px dashed #dee2e6;
     transition: border-color 0.3s;
     font-size: 14px;
+    overflow: auto;
 }
 
 .container:hover {
