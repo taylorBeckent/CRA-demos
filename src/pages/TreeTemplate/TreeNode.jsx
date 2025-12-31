@@ -164,7 +164,7 @@ const TreeNode = (props) => {
                                     onDragEnd={onDragEnd}
                                     onCollapse={onCollapse}
                                     onAddNode={onAddNode}
-                                    dragOverInfo={dragOverInfo} // 确保传递 dragOverInfo
+                                    dragOverInfo={dragOverInfo}
                                 />
                             ))}
                             <div className="add-step">

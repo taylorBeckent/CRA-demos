@@ -1,10 +1,9 @@
-/* dragTemplate.css */
 .container {
-    width: 32%;
+    /*width: 32%;*/
+    width: 100%;
     height: 600px;
     min-height: 120px;
     display: flex;
-    /*flex-wrap: wrap;*/
     flex-direction: column;
     gap: 12px;
     margin-top: 20px;
@@ -99,21 +98,21 @@
 }
 
 /* 折叠/展开图标 */
-.item-content .anticon {
-    width: 16px;
-    height: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #8c8c8c;
-    transition: all 0.3s ease;
-    margin-right: 8px;
-}
+/*.item-content .anticon {*/
+/*    width: 16px;*/
+/*    height: 16px;*/
+/*    display: flex;*/
+/*    align-items: center;*/
+/*    justify-content: center;*/
+/*    color: #8c8c8c;*/
+/*    transition: all 0.3s ease;*/
+/*    margin-right: 8px;*/
+/*}*/
 
-.item-content .anticon:hover {
-    color: #419efe;
-    transform: scale(1.1);
-}
+/*.item-content .anticon:hover {*/
+/*    color: #419efe;*/
+/*    transform: scale(1.1);*/
+/*}*/
 
 /* 节点内容 */
 .node-content {
@@ -204,7 +203,7 @@
     border-radius: 50%;
     background: #419efe;
     opacity: 0.3;
-    z-index: 1;
+    z-index: -1;
 }
 
 /* 拖拽时的样式 */

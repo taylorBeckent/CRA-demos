@@ -11,7 +11,11 @@ import {
 import {Button, Dropdown} from "antd";
 import TreeNode from "./TreeNode";
 
-const TreeTemplate = () => {
+const TreeTemplate = (props) => {
+    const {
+        initialItems
+    } = props;
+
     const [ dataList, setDataList ] = useState([]);
     const [ dragOverInfo, setDragOverInfo ] = useState(null);
     const dragItemRef = useRef(null);
@@ -442,152 +446,5 @@ const TreeTemplate = () => {
         </div>
     );
 };
-
-// 初始数据
-const initialItems = [
-    {
-        id: 'item-1',
-        content: '完成项目需求分析',
-        color: '#FF6B6B',
-        depth: 0,
-        isHovered: false,
-        isSelected: false,
-        draggable: false,
-        collapse: true,
-        haveChild: true,
-        childNode: [
-            {
-                id: 'item-1-1',
-                content: '子节点1',
-                color: '#FF6B6B',
-                depth: 1,
-                isHovered: false,
-                isSelected: false,
-                draggable: false,
-                collapse: true,
-                haveChild: true,
-                childNode: [
-                    {
-                        id: 'item-1-1-1',
-                        content: '孙子节点1',
-                        color: '#FFD166',
-                        depth: 2,
-                        isHovered: false,
-                        isSelected: false,
-                        draggable: false,
-                        collapse: true,
-                        haveChild: false,
-                    },
-                    {
-                        id: 'item-1-1-2',
-                        content: '孙子节点2',
-                        color: '#06D6A0',
-                        depth: 2,
-                        isHovered: false,
-                        isSelected: false,
-                        draggable: false,
-                        collapse: true,
-                        haveChild: false,
-                    }
-                ]
-            },
-            {
-                id: 'item-1-2',
-                content: '子节点2',
-                color: '#4ECDC4',
-                depth: 1,
-                isHovered: false,
-                isSelected: false,
-                draggable: false,
-                collapse: true,
-                haveChild: true,
-                childNode: [
-                    {
-                        id: 'item-1-2-1',
-                        content: '孙子节点3',
-                        color: '#FFD166',
-                        depth: 2,
-                        isHovered: false,
-                        isSelected: false,
-                        draggable: false,
-                        collapse: true,
-                        haveChild: false,
-                    },
-                    {
-                        id: 'item-1-2-2',
-                        content: '孙子节点4',
-                        color: '#06D6A0',
-                        depth: 2,
-                        isHovered: false,
-                        isSelected: false,
-                        draggable: false,
-                        collapse: true,
-                        haveChild: false,
-                    }
-                ]
-            },
-        ]
-    },
-    {
-        id: 'item-2',
-        content: '设计UI原型图',
-        color: '#4ECDC4',
-        depth: 0,
-        isHovered: false,
-        isSelected: false,
-        draggable: false,
-        collapse: true,
-        haveChild: false,
-        childNode: []
-    },
-    {
-        id: 'item-3',
-        content: '前端页面开发',
-        color: '#FFD166',
-        depth: 0,
-        isHovered: false,
-        isSelected: false,
-        draggable: false,
-        collapse: true,
-        haveChild: true,
-        childNode: [
-            {
-                id: 'item-3-1',
-                content: 'React组件开发',
-                color: '#FFD166',
-                depth: 1,
-                isHovered: false,
-                isSelected: false,
-                draggable: false,
-                collapse: true,
-                childNode: []
-            }
-        ]
-    },
-    {
-        id: 'item-4',
-        content: '后端API联调',
-        color: '#06D6A0',
-        depth: 0,
-        isHovered: false,
-        isSelected: false,
-        draggable: false,
-        collapse: true,
-        haveChild: false,
-        childNode: []
-    },
-    {
-        id: 'item-5',
-        content: '测试与发布上线',
-        color: '#118AB2',
-        depth: 0,
-        isHovered: false,
-        isSelected: false,
-        draggable: false,
-        collapse: true,
-        haveChild: true,
-        childNode: []
-    },
-];
 
 export default TreeTemplate;
