@@ -3,7 +3,7 @@ import './index.css';
 import HeaderBar from './headerBar';
 import TreeTemplate from "../TreeTemplate";
 import TitleContent from "./titleContent";
-
+import HttpPage from "./httpPage";
 
 const TestCase = () => {
     return (
@@ -22,7 +22,9 @@ const TestCase = () => {
                             initialItems={initialItems}
                         />
                     </div>
-                    <div className="right-side"></div>
+                    <div className="right-side">
+                        <HttpPage/>
+                    </div>
                 </div>
 
             </div>

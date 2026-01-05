@@ -11,7 +11,7 @@ const DragTemplate = lazy(() => import('../pages/DragTemplate'));
 const TreeHandle = lazy(() => import('../pages/TreeHandle'));
 const TreeTemplate = lazy(() => import('../pages/TreeTemplate'));
 const TestCase = lazy(() => import('../pages/TestCase'));
-const MainLayout = lazy(() => import('../layouts/MainLayout'));
+// const MainLayout = lazy(() => import('../layouts/MainLayout'));
 
 // const routes = [
 //     {

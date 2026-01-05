@@ -1,0 +1,11 @@
+.request-body-scene {
+    display: flex;
+    margin-bottom: 10px;
+}
+
+.request-body-content-none {
+    color: gray;
+    margin-top: 10px;
+    border-top: 1px solid #e5e7ee;
+    padding-top: 10px;
+}

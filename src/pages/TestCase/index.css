@@ -25,6 +25,12 @@
   box-shadow: 0 0 12px rgba(0,0,0,.12);
 }
 
+.body-side {
+  display: flex;
+  /*align-items: center;*/
+  justify-content: center;
+}
+
 .left-side {
   width: 32%;
   height: calc(100% - 61px);
@@ -33,4 +39,5 @@
 .right-side {
   width: 68%;
   height: calc(100% - 61px);
+  padding: 20px;
 }
