@@ -1,4 +1,5 @@
-import { Form, Table, Input, Button, Space } from 'antd';
+import { Form, Table, Input, Button, Space, Popconfirm, message } from 'antd';
+import {DeleteOutlined} from "@ant-design/icons";
 
 const EditableTableWithFormList = () => {
     const [form] = Form.useForm();
@@ -31,18 +32,35 @@ const EditableTableWithFormList = () => {
             ),
         },
         {
-            title: 'Action',
+            title: '操作',
             render: (_, { field, operation }) => (
-                <Button
-                    danger
-                    type="text"
-                    onClick={() => operation.remove(field.name)} // 使用 Form.List 的 operation 移除行
-                >
-                    Delete
-                </Button>
+                <>
+                    <Popconfirm title="是否删除该行？" onConfirm={() => handleDelete(field, operation)} >
+                        <Button
+                            danger
+                            type="link"
+                            icon={<DeleteOutlined  />}
+                            // onClick={() => operation.remove(field.name)} // 使用 Form.List 的 operation 移除行
+                        />
+                    </Popconfirm>
+                </>
+
             ),
         },
     ];
+
+    //. 删除
+    const handleDelete = (field, operation) => {
+        console.log(field, operation);
+        console.log('form', form.getFieldValue('list'));
+        let tableList = form.getFieldValue('list');
+        if(tableList && tableList.length > 1){
+            operation.remove(field.name);
+            message.success('删除成功');
+        } else {
+            message.error('最后一条数据不能删除');
+        }
+    };
 
     // 表单提交处理
     const onFinish = (values) => {
@@ -61,7 +79,6 @@ const EditableTableWithFormList = () => {
                             columns={columns}
                             pagination={false}
                         />
-                        {/* 添加新行按钮 */}
                         <Button
                             type="dashed"
                             onClick={() => operation.add()}
