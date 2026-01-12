@@ -1,100 +1,202 @@
-import { Form, Table, Input, Button, Space, Popconfirm, message } from 'antd';
-import {DeleteOutlined} from "@ant-design/icons";
+import React, { useState, useEffect, useRef } from 'react';
+import { Table, Input, Button, Select, Checkbox, Space } from 'antd';
 
-const EditableTableWithFormList = () => {
-    const [form] = Form.useForm();
+const EditableFormDataTable = ({ value = [], onChange }) => {
+    const [dataSource, setDataSource] = useState([]);
+    const [nextId, setNextId] = useState(1);
+    const isInitialMount = useRef(true);
+    const skipUpdate = useRef(false);
 
-    // 定义列。关键在于：在 render 函数中，根据 field 对象构建 Form.Item
+    // 初始化数据 - 只在初始加载时或value改变时更新
+    useEffect(() => {
+        // 如果是外部value变化，且不是我们内部触发的更新
+        if (isInitialMount.current) {
+            // 首次加载
+            if (value && value.length > 0) {
+                const dataWithId = value.map((item, index) => ({
+                    ...item,
+                    id: item.id || `row-${index}`,
+                    key: item.key || '',
+                    value: item.value || '',
+                    type: item.type || 'text',
+                    description: item.description || ''
+                }));
+                setDataSource(dataWithId);
+                setNextId(dataWithId.length + 1);
+            } else {
+                // 默认添加一行空数据
+                const initialRow = {
+                    id: 'row-0',
+                    key: '',
+                    value: '',
+                    type: 'text',
+                    description: ''
+                };
+                setDataSource([initialRow]);
+            }
+            isInitialMount.current = false;
+        }
+    }, [value]); // 只监听value的变化
+
+    // 内部状态变化时通知父组件
+    useEffect(() => {
+        // 跳过初始化和内部更新触发的通知
+        if (isInitialMount.current || skipUpdate.current) {
+            skipUpdate.current = false;
+            return;
+        }
+
+        // 通知父组件
+        if (onChange) {
+            const formattedData = dataSource.map(({ id, ...rest }) => rest);
+            onChange(formattedData);
+        }
+    }, [dataSource, onChange]);
+
+    // 添加新行
+    const addNewRow = () => {
+        const newRow = {
+            id: `row-${nextId}`,
+            key: '',
+            value: '',
+            type: 'text',
+            description: ''
+        };
+        setNextId(nextId + 1);
+        setDataSource(prev => [...prev, newRow]);
+    };
+
+    // 删除行
+    const deleteRow = (id) => {
+        setDataSource(prev => prev.filter(item => item.id !== id));
+    };
+
+    // 更新行数据
+    const updateRow = (id, field, value) => {
+        setDataSource(prev =>
+            prev.map(item =>
+                item.id === id ? { ...item, [field]: value } : item
+            )
+        );
+    };
+
+    // 列定义
     const columns = [
         {
             title: 'Key',
             dataIndex: 'key',
-            render: (_, { field }) => (
-                <Form.Item
-                    name={[field.name, 'key']} // namePath 为 [index, 'key']
-                    rules={[{ required: true, message: 'Key required' }]}
-                    style={{ margin: 0 }}
-                >
-                    <Input placeholder="Enter key" />
-                </Form.Item>
+            width: '25%',
+            render: (text, record) => (
+                <Input
+                    value={text}
+                    onChange={(e) => updateRow(record.id, 'key', e.target.value)}
+                    placeholder="参数名"
+                />
             ),
         },
         {
             title: 'Value',
             dataIndex: 'value',
-            render: (_, { field }) => (
-                <Form.Item
-                    name={[field.name, 'value']} // namePath 为 [index, 'value']
-                    style={{ margin: 0 }}
+            width: '25%',
+            render: (text, record) => {
+                console.log(record)
+                if (record.type === 'file') {
+                    return (
+                        <div>
+                            {/*<span style={{ marginRight: 8 }}>{text || '未选择文件'}</span>*/}
+                            <span style={{ marginRight: 8 }}>{text}</span>
+                            <input
+                                type="file"
+                                onChange={(e) => {
+                                    const file = e.target.files[0];
+                                    if (file) {
+                                        updateRow(record.id, 'value', file.name);
+                                        updateRow(record.id, 'file', file);
+                                    }
+                                }}
+                            />
+                        </div>
+                    );
+                }
+                return (
+                    <Input
+                        value={text}
+                        onChange={(e) => updateRow(record.id, 'value', e.target.value)}
+                        placeholder="参数值"
+                    />
+                );
+            },
+        },
+        {
+            title: 'Type',
+            dataIndex: 'type',
+            width: '15%',
+            render: (text, record) => (
+                <Select
+                    value={text}
+                    onChange={(value) => {
+                        updateRow(record.id, 'type', value);
+                        // 如果是非文件类型，清除文件
+                        if (value !== 'file') {
+                            updateRow(record.id, 'file', null);
+                        }
+                    }}
+                    style={{ width: '100%' }}
                 >
-                    <Input placeholder="Enter value" />
-                </Form.Item>
+                    <Select.Option value="text">Text</Select.Option>
+                    <Select.Option value="file">File</Select.Option>
+                    <Select.Option value="json">JSON</Select.Option>
+                </Select>
+            ),
+        },
+        {
+            title: 'Description',
+            dataIndex: 'description',
+            width: '20%',
+            render: (text, record) => (
+                <Input
+                    value={text}
+                    onChange={(e) => updateRow(record.id, 'description', e.target.value)}
+                    placeholder="描述"
+                />
             ),
         },
         {
             title: '操作',
-            render: (_, { field, operation }) => (
-                <>
-                    <Popconfirm title="是否删除该行？" onConfirm={() => handleDelete(field, operation)} >
-                        <Button
-                            danger
-                            type="link"
-                            icon={<DeleteOutlined  />}
-                            // onClick={() => operation.remove(field.name)} // 使用 Form.List 的 operation 移除行
-                        />
-                    </Popconfirm>
-                </>
-
+            width: '5%',
+            render: (_, record) => (
+                <Button
+                    type="link"
+                    danger
+                    onClick={() => deleteRow(record.id)}
+                    disabled={dataSource.length === 1}
+                >
+                    删除
+                </Button>
             ),
         },
     ];
 
-    //. 删除
-    const handleDelete = (field, operation) => {
-        console.log(field, operation);
-        console.log('form', form.getFieldValue('list'));
-        let tableList = form.getFieldValue('list');
-        if(tableList && tableList.length > 1){
-            operation.remove(field.name);
-            message.success('删除成功');
-        } else {
-            message.error('最后一条数据不能删除');
-        }
-    };
-
-    // 表单提交处理
-    const onFinish = (values) => {
-        console.log('Received values:', values);
-        // 这里可以处理提交逻辑，例如发送到后端
-    };
-
     return (
-        <Form form={form} onFinish={onFinish} initialValues={{ list: [{ key: '', value: '' }] }}>
-            <Form.List name="list">
-                {(fields, operation) => (
-                    <>
-                        <Table
-                            rowKey={(record) => record.field.key}
-                            dataSource={fields.map((field) => ({ field, operation }))} // 映射数据源
-                            columns={columns}
-                            pagination={false}
-                        />
-                        <Button
-                            type="dashed"
-                            onClick={() => operation.add()}
-                            style={{ marginTop: 16 }}
-                            block
-                        >
-                            + Add Row
-                        </Button>
-                    </>
+        <div>
+            <Table
+                columns={columns}
+                dataSource={dataSource}
+                rowKey="id"
+                pagination={false}
+                size="small"
+                footer={() => (
+                    <Button
+                        type="dashed"
+                        onClick={addNewRow}
+                        block
+                    >
+                        + 添加参数
+                    </Button>
                 )}
-            </Form.List>
-            <Button type="primary" htmlType="submit" style={{ marginTop: 16 }}>
-                Submit
-            </Button>
-        </Form>
+            />
+        </div>
     );
 };
 
-export default EditableTableWithFormList;
+export default EditableFormDataTable;

@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import {Tabs, Radio} from 'antd';
 import styles from './iondex.module.css';
 import RequestFormData from "./RequestFormData";
+import RequestFormUrlencoded from "./RequestFormUrlencoded";
 
 const RequestBody = () => {
     const [ curType, setCurType ] = useState('none');
@@ -24,6 +25,7 @@ const RequestBody = () => {
             <div className={styles['request-body-content']}>
                 {curType == 'none' && <div className={styles['request-body-content-none']}>当前请求没有请求体</div>}
                 {curType == 'form-data' && <RequestFormData/>}
+                {curType == 'x-www-form-urlencoded' && <RequestFormUrlencoded/>}
             </div>
         </div>
     );

@@ -11,6 +11,7 @@ const DragTemplate = lazy(() => import('../pages/DragTemplate'));
 const TreeHandle = lazy(() => import('../pages/TreeHandle'));
 const TreeTemplate = lazy(() => import('../pages/TreeTemplate'));
 const TestCase = lazy(() => import('../pages/TestCase'));
+const InputTag = lazy(() => import('../pages/TestPage/InputTag'))
 // const MainLayout = lazy(() => import('../layouts/MainLayout'));
 
 // const routes = [
@@ -81,6 +82,11 @@ const routes = [
     {
         path: '/TestCase',
         element: <TestCase/>,
+        exact: true,
+    },
+    {
+        path: '/InputTag',
+        element: <InputTag/>,
         exact: true,
     },
 ]

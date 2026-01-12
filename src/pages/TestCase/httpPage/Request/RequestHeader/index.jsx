@@ -1,13 +1,10 @@
 import {Form, Table, Input, Button, Space, Popconfirm, message, Tooltip, Card, AutoComplete} from 'antd';
-import {DeleteOutlined, EyeOutlined, EyeInvisibleOutlined, CopyOutlined} from "@ant-design/icons";
+import {DeleteOutlined, ApiOutlined, EyeInvisibleOutlined, CopyOutlined} from "@ant-design/icons";
 import React, {useEffect, useState} from 'react';
 import styles from './index.module.css'; // 如果需要额外的CSS样式
 
 const RequestHeader = () => {
     const [ form ] = Form.useForm();
-
-    // 用于控制每个输入框的图标显示状态
-    const [ inputStates, setInputStates ] = useState({});
 
     const columns = [
         {
@@ -28,22 +25,20 @@ const RequestHeader = () => {
             title: 'Value',
             dataIndex: 'value',
             width: 300,
-            render: (_, { field }) => (
-                <Form.Item
-                    name={[ field.name, 'value' ]}
-                    style={{ margin: 0 }}
-                >
-                    <Input
-                        placeholder="Enter value"
-                        suffix={renderValueSuffix(field)}
-                        // onMouseEnter={() => handleInputMouseEnter(field.name)}
-                        // onMouseLeave={() => handleInputMouseLeave(field.name)}
-                        // onFocus={() => handleInputFocus(field.name)}
-                        // onBlur={() => handleInputBlur(field.name)}
-                        className={styles['custom-input-with-suffix']}
-                    />
-                </Form.Item>
-            ),
+            render: (_, { field }) => {
+                return (
+                    <Form.Item
+                        name={[ field.name, 'value' ]}
+                        style={{ margin: 0 }}
+                    >
+                        <Input
+                            placeholder="Enter value"
+                            suffix={renderValueSuffix(field)}
+                            className={styles['custom-input-with-suffix']}
+                        />
+                    </Form.Item>
+                )
+            },
         },
         {
             title: 'Remarks',
@@ -76,52 +71,8 @@ const RequestHeader = () => {
         },
     ];
 
-    // 处理鼠标进入输入框
-    const handleInputMouseEnter = (fieldName) => {
-        setInputStates(prev => ({
-            ...prev,
-            [fieldName]: {
-                ...prev[fieldName],
-                hovered: true
-            }
-        }));
-    };
-
-    // 处理鼠标离开输入框
-    const handleInputMouseLeave = (fieldName) => {
-        setInputStates(prev => ({
-            ...prev,
-            [fieldName]: {
-                ...prev[fieldName],
-                hovered: false
-            }
-        }));
-    };
-
-    // 处理输入框获得焦点
-    const handleInputFocus = (fieldName) => {
-        setInputStates(prev => ({
-            ...prev,
-            [fieldName]: {
-                ...prev[fieldName],
-                focused: true
-            }
-        }));
-    };
-
-    // 处理输入框失去焦点
-    const handleInputBlur = (fieldName) => {
-        setInputStates(prev => ({
-            ...prev,
-            [fieldName]: {
-                ...prev[fieldName],
-                focused: false
-            }
-        }));
-    };
-
-    const [options, setOptions] = useState([]); //. 变量框的下拉值
-    const [variableStatus, setVariableStatus] = useState(false); //. 变量框
+    const [ options, setOptions ] = useState([]); //. 变量框的下拉值
+    const [ variableStatus, setVariableStatus ] = useState(false); //. 变量框
 
     const renderItem = (title) => ({
         value: title,
@@ -151,13 +102,13 @@ const RequestHeader = () => {
     useEffect(() => {
         console.log(variableOptions);
         setOptions(variableOptions);
-    },[]);
+    }, []);
 
     //. 运行窗口
     const variableWindow = () => {
         const variableSearch = (searchText) => {
             let filterList;
-            if(searchText){
+            if (searchText) {
                 filterList = variableOptions.filter(item => {
                     return item.value.indexOf(searchText) !== -1;
                 });
@@ -183,7 +134,8 @@ const RequestHeader = () => {
                             <div>预览：${``}</div>
                         </div>
                     </div>
-                    <Button type="primary" style={{ width: '100%' }} onClick={()=>{setVariableStatus(false)}} >确定</Button>
+                    <Button type="primary" style={{ width: '100%' }} onClick={() => {
+                    }}>确定</Button>
                 </Card>
             </div>
         )
@@ -191,15 +143,19 @@ const RequestHeader = () => {
 
     // 渲染Value输入框的suffix图标
     const renderValueSuffix = (field) => {
-        // const fieldState = inputStates[field.name] || {};
-        // const showIcon = fieldState.hovered || fieldState.focused;
-        //
-        // if (!showIcon) {
-        //     return null;
-        // }
+
+        // console.log(text, record);
+        console.log(field);
+
+        let currentData = form.getFieldValue('list');
+        console.log(currentData);
+
+        let record = currentData[field.name];
+        console.log(record);
 
         return (
             <Space
+                key={field.name}
                 size="small"
                 style={{
                     // width: 80, // 固定宽度
@@ -214,7 +170,7 @@ const RequestHeader = () => {
                     <Button
                         type="link"
                         size="small"
-                        icon={<EyeOutlined/>}
+                        icon={<ApiOutlined/>}
                         onClick={() => {
                             handleViewValue(field);
                         }}
@@ -237,19 +193,22 @@ const RequestHeader = () => {
         // if (fieldValue) {
         //     message.info(`Value: ${fieldValue}`);
         // };
-        console.log('assss');
-        setVariableStatus(true);
-    };
+        console.log('assss', field, form.getFieldValue('list'));
 
-    // 复制值的处理函数
-    const handleCopyValue = (field) => {
-        const values = form.getFieldsValue();
-        const fieldValue = values.list?.[field.name]?.value;
-        if (fieldValue) {
-            navigator.clipboard.writeText(fieldValue)
-                .then(() => message.success('复制成功'))
-                .catch(() => message.error('复制失败'));
-        }
+        let record = form.getFieldValue('list')[field.name];
+        console.log(record);
+
+        let newRecord = {...record, variableStatus: !record.variableStatus};
+
+        let newData = form.getFieldValue('list');
+        newData[field.name] = newRecord;
+        console.log(newData);
+
+
+
+        // let newData = form.getFieldValue('list')[field.name]
+
+        // setVariableStatus(!variableStatus);
     };
 
     // 删除行
@@ -269,13 +228,19 @@ const RequestHeader = () => {
     };
 
     return (
-        <Form form={form} onFinish={onFinish} initialValues={{ list: [ { key: '', value: '' } ] }}>
+        <Form form={form} onFinish={onFinish}
+              initialValues={{ list: [ { key: '', value: '', variableStatus: false } ] }}>
             <Form.List name="list">
                 {(fields, operation) => (
                     <>
                         <Table
                             rowKey={(record) => record.field.key}
-                            dataSource={fields.map((field) => ({ field, operation }))}
+                            dataSource={fields.map((field) => ({
+                                key: field.key,
+                                field,
+                                operation,
+                                index: field.name
+                            }))}
                             columns={columns}
                             pagination={false}
                         />

@@ -3,6 +3,7 @@ import {Tabs} from 'antd';
 import styles from './index.module.css';
 import RequestBody from "./RequestBody";
 import RequestHeader from "./RequestHeader";
+import VariableTable from './VariableTable';
 
 const { TabPane } = Tabs;
 
@@ -18,7 +19,9 @@ const HttpRequest = () => {
                     <TabPane tab="请求头" key="requestHeader" >
                         <RequestHeader/>
                     </TabPane>
-                    <TabPane tab="变量" key="variable" ></TabPane>
+                    <TabPane tab="变量" key="variable" >
+                        <VariableTable/>
+                    </TabPane>
                     <TabPane tab="提取" key="extract" ></TabPane>
                     <TabPane tab="断言规则" key="assert" ></TabPane>
                 </Tabs>
