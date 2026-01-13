@@ -37,7 +37,7 @@ const TagInput = () => {
         });
 
         // 如果正在编辑的被删除，清除编辑状态
-        if (editingTag.value === removedTag) {
+        if (editingTag.index === index) {
             setEditingTag({ index: null, value: '' });
         }
     };

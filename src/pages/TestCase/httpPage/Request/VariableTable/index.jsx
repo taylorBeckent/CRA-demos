@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useRef} from 'react';
-import {Table, Input, Button, Select, Checkbox, Space, Card, AutoComplete, Tooltip} from 'antd';
+import {Table, Input, Button, Select, Checkbox, Space, Card, AutoComplete, Tooltip, Tag} from 'antd';
 import {ApiOutlined} from '@ant-design/icons';
 import styles from "./index.module.css";
 
@@ -10,6 +10,10 @@ const EditableFormDataTable = ({ value = [], onChange }) => {
     const skipUpdate = useRef(false);
     const [ autoCompleteOptions, setAutoCompleteOptions ] = useState([]); //. 变量函数下拉
 
+    // const [ Tags, setTags ] = useState([]); //. 标签
+    const [ autoCompleteValue, setAutoCompleteValue ] = useState('');
+
+    const editInputRef = useRef(null);
 
     // 初始化数据 - 只在初始加载时或value改变时更新
     useEffect(() => {
@@ -22,8 +26,14 @@ const EditableFormDataTable = ({ value = [], onChange }) => {
                     id: item.id || `row-${index}`,
                     key: item.key || '',
                     value: item.value || '',
+                    tagList: item.value || [],
+                    inputValue: '',  // 每行独立的输入状态
+                    editingTag: {    // 每行独立的编辑状态
+                        index: null,
+                        value: ''
+                    },
                     description: item.description || '',
-                    variableStatus: false
+                    variableStatus: false,
                 }));
                 setDataSource(dataWithId);
                 setNextId(dataWithId.length + 1);
@@ -33,6 +43,12 @@ const EditableFormDataTable = ({ value = [], onChange }) => {
                     id: 'row-0',
                     key: '',
                     value: '',
+                    tagList: [],
+                    inputValue: '',  // 每行独立的输入状态
+                    editingTag: {    // 每行独立的编辑状态
+                        index: null,
+                        value: ''
+                    },
                     description: '',
                     variableStatus: false
                 };
@@ -79,12 +95,68 @@ const EditableFormDataTable = ({ value = [], onChange }) => {
             width: '25%',
             render: (text, record) => {
                 return (
-                    <Input
-                        value={text}
-                        suffix={renderValueSuffix(record)}
-                        onChange={(e) => updateRow(record.id, 'value', e.target.value)}
-                        placeholder="参数值"
-                    />
+                    <div
+                        style={{
+                            border: '1px solid #d9d9d9',
+                            borderRadius: 6,
+                            padding: '4px 8px',
+                            minHeight: 32,
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            alignItems: 'center',
+                        }}
+                    >
+                        {record.tagList.map((tag, index) => (
+                            <div key={`${record.id}-${tag}-${index}`}
+                                 style={{ margin: '2px 4px', display: 'inline-block' }}>
+                                {record.editingTag.index === index ? (
+                                    <Input
+                                        key={`${record.id}-${tag}-${index}`}
+                                        ref={editInputRef}
+                                        value={record.editingTag.value}
+                                        onChange={(e) => {
+                                            handleEditChange(e, record)
+                                        }}
+                                        onKeyDown={(e) => handleEditKeyDown(e, record, index)}
+                                        onBlur={() => handleEditBlur(record, index)}
+                                        size="small"
+                                        style={{
+                                            width: 80,
+                                            height: 24
+                                        }}
+                                    />
+                                ) : (
+                                    <Tag
+                                        closable
+                                        onClose={() => handleClose(record, index)}
+                                        onClick={() => startEditing(tag, index, record)}
+                                        style={{
+                                            margin: 0,
+                                            cursor: 'pointer',
+                                            userSelect: 'none'
+                                        }}
+                                    >
+                                        {tag}
+                                    </Tag>
+                                )}
+                            </div>
+                        ))}
+
+                        <Input
+                            key={`${record.id}`}
+                            value={record.inputValue}
+                            onChange={(e) => handleInputChange(e, record)}
+                            onPressEnter={() => handleInputConfirm(record)}
+                            onBlur={() => handleInputConfirm(record)}
+                            border={false}
+                            placeholder={record.tagList.length === 0 ? '请输入标签，回车确认' : ''}
+                            style={{
+                                flex: 1,
+                                minWidth: 60
+                            }}
+                            suffix={renderValueSuffix(record)}
+                        />
+                    </div>
                 );
             },
         },
@@ -115,6 +187,76 @@ const EditableFormDataTable = ({ value = [], onChange }) => {
             ),
         },
     ];
+
+    //. 标签相关-------------
+    const handleInputChange = (e, record) => {
+        updateRow(record.id, 'inputValue', e.target.value);
+    };
+
+    //. 标签化
+    const handleInputConfirm = (record) => {
+        if (record.inputValue) {
+            updateRow(record.id, 'tagList', [ ...record.tagList, record.inputValue ]);
+            updateRow(record.id, 'inputValue', '');
+        }
+    };
+
+    //. 删除标签
+    const handleClose = (record, removeIndex) => {
+        const newList = record.tagList.filter((_, itemIndex) => itemIndex !== removeIndex);
+        updateRow(record.id, 'tagList', newList);
+
+        //. 如果正在编辑被删除，清除编辑状态
+        if (record.editingTag.index === removeIndex) {
+            updateRow(record.id, 'editingTag', { index: null, value: '' });
+        }
+    };
+
+    //. 点击标签编辑
+    const startEditing = (tag, index, record) => {
+        updateRow(record.id, 'editingTag', { index, value: tag });
+        updateRow(record.id, 'inputValue', '');
+    };
+
+    //. 处理编辑输入变化
+    const handleEditChange = (e, record) => {
+        updateRow(record.id, 'editingTag', { ...record?.editingTag, value: e.target.value })
+    };
+
+    //. 编辑完成
+    const handleEditConfirm = (record, index) => {
+        if (!record.editingTag.value.trim()) {
+            //. 如果编辑后为空的话，删除标签
+            const newTags = record.tagList.filter((item, itemIndex) => itemIndex !== index);
+            record.tagList = newTags;
+        } else {
+            //. 正常编辑后保存
+            const newTags = [ ...record.tagList ];
+            newTags[index] = record.editingTag.value;
+            record.tagList = newTags;
+        }
+        //. 结束编辑
+        updateRow(record.id, 'editingTag', { index: null, value: '' });
+    };
+
+    //. 编辑时按回车保存为标签
+    const handleEditKeyDown = (e, record, index) => {
+        e.stopPropagation();
+        
+        if (e.key === 'Enter') {
+            handleEditConfirm(record, index);
+        } else if (e.key === 'Escape') {
+            //. ESC 取消编辑
+            updateRow(record.id, 'editingTag', { index: null, value: '' });
+        }
+    };
+
+    //. 处理输入框失焦
+    const handleEditBlur = (record, index) => {
+        handleEditConfirm(record, index);
+    };
+
+    //. 标签相关-------------
 
     //. 后缀相关------------
     const renderItem = (context) => ({
@@ -152,11 +294,14 @@ const EditableFormDataTable = ({ value = [], onChange }) => {
             } else {
                 filterList = variableOptions;
             }
-
             setAutoCompleteOptions(filterList);
         };
 
         const handleVariableOk = (record) => {
+            const newTags = [...record.tagList, autoCompleteValue];
+            console.log(newTags)
+            updateRow(record.id, 'tagList', newTags);
+            setAutoCompleteValue('');
             openAndCloseDialog(record);
         };
 
@@ -167,17 +312,21 @@ const EditableFormDataTable = ({ value = [], onChange }) => {
                         <div className={styles['variable-input']}>
                             <AutoComplete
                                 style={{ width: '100%' }}
+                                value={autoCompleteValue}
                                 options={autoCompleteOptions}
                                 onSearch={variableSearch}
+                                onChange={(e) => setAutoCompleteValue(e)}
                                 placeholder="请输入表达式"
                             />
                         </div>
                         <div className={styles['variable-preview']}>
-                            <div>表达式：</div>
-                            <div>预览：${``}</div>
+                            <div>表达式：{autoCompleteValue}</div>
+                            <div>预览：${`${autoCompleteValue}`}</div>
                         </div>
                     </div>
-                    <Button type="primary" style={{ width: '100%' }} onClick={() => { handleVariableOk(record) }}>确定</Button>
+                    <Button type="primary" style={{ width: '100%' }} onClick={() => {
+                        handleVariableOk(record)
+                    }}>确定</Button>
                 </Card>
             </div>
         )
@@ -224,14 +373,8 @@ const EditableFormDataTable = ({ value = [], onChange }) => {
 
     //. 打开/关闭弹窗
     const openAndCloseDialog = (record) => {
-        let copyData = JSON.parse(JSON.stringify(dataSource));
-        copyData.map(item => {
-            if (item.id == record.id) {
-                item.variableStatus = !item.variableStatus;
-            }
-        })
-        console.log(copyData);
-        setDataSource(copyData);
+        setAutoCompleteOptions(variableOptions);
+        updateRow(record.id, 'variableStatus', !record.variableStatus);
     };
 
     //. 后缀相关------------
@@ -242,6 +385,7 @@ const EditableFormDataTable = ({ value = [], onChange }) => {
             id: `row-${nextId}`,
             key: '',
             value: '',
+            tagList: [],
             description: '',
             variableStatus: false
         };
