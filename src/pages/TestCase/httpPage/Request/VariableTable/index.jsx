@@ -94,6 +94,7 @@ const EditableFormDataTable = ({ value = [], onChange }) => {
             dataIndex: 'value',
             width: '25%',
             render: (text, record) => {
+                console.log(record);
                 return (
                     <div
                         style={{
@@ -242,7 +243,7 @@ const EditableFormDataTable = ({ value = [], onChange }) => {
     //. 编辑时按回车保存为标签
     const handleEditKeyDown = (e, record, index) => {
         e.stopPropagation();
-        
+
         if (e.key === 'Enter') {
             handleEditConfirm(record, index);
         } else if (e.key === 'Escape') {
@@ -299,7 +300,7 @@ const EditableFormDataTable = ({ value = [], onChange }) => {
 
         const handleVariableOk = (record) => {
             const newTags = [...record.tagList, autoCompleteValue];
-            console.log(newTags)
+            // console.log(newTags)
             updateRow(record.id, 'tagList', newTags);
             setAutoCompleteValue('');
             openAndCloseDialog(record);

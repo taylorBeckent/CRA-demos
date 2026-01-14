@@ -1,0 +1,19 @@
+.collapse-container :global(.ant-form-item-label) {
+    font-size: 12px;
+}
+
+.collapse-container :global(.ant-form-item) {
+    margin-bottom: 10px;
+}
+
+.collapse-container :global(.ant-collapse-header.ant-collapse-header) {
+    display: flex;
+    align-items: center;
+    padding: 6px 16px 6px 16px;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
