@@ -1,6 +1,7 @@
 import React from 'react';
 import {Tabs} from 'antd';
 import styles from './index.module.css';
+import RunningLog from "./RunningLog";
 
 const { TabPane } = Tabs;
 
@@ -14,7 +15,9 @@ const HttpResponse = () => {
                     <TabPane tab="请求信息" key="requestInfo" ></TabPane>
                     <TabPane tab="变量追踪" key="variableTrace" ></TabPane>
                     <TabPane tab="结果断言" key="assert" > </TabPane>
-                    <TabPane tab="运行日志" key="runningLog" ></TabPane>
+                    <TabPane tab="运行日志" key="runningLog" >
+                        <RunningLog/>
+                    </TabPane>
                 </Tabs>
             </div>
         </div>

@@ -76,6 +76,7 @@ const CollapseComponent = (props) => {
                                 ))}
                             </Select>
                         </Form.Item>
+
                         <Form.Item labelCol={{ span: 6 }} wrapperCol={{ span: 6 }} label="提取范围" name="scale"
                                    initialValue={2}
                         >
@@ -87,6 +88,7 @@ const CollapseComponent = (props) => {
                                 <Radio value={2}>提取部分</Radio>
                             </Radio.Group>
                         </Form.Item>
+
                         {scaleVal == 2 && (
                             <Form.Item labelCol={{ span: 6 }} wrapperCol={{ span: 16 }} label="提取表达式" name="expression">
                                 <Input value={expressionVal} onChange={(e) => setExpressionVal(e.target.value)}

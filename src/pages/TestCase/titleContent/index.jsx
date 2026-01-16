@@ -1,5 +1,5 @@
 import React from 'react';
-import {Button, Form, Row, Col, Input, Select} from 'antd';
+import {Button, Form, Row, Col, Input, Select, Cascader} from 'antd';
 import './index.css';
 
 const TitleContent = () => {
@@ -7,9 +7,79 @@ const TitleContent = () => {
     const [ form ] = Form.useForm();
     const { Option } = Select;
 
+    const options = [
+        {
+            label: 'light',
+            value: 'light',
+            children: new Array(20).fill(null).map((_, index) => ({
+                label: `Number ${index}`,
+                value: index
+            }))
+        },
+        {
+            label: '微服务',
+            value: 'microserver',
+            children: [
+                {
+                    label: 'tag1',
+                    value: 'tag1'
+                },
+                {
+                    label: 'tag2',
+                    value: 'tag2'
+                },
+                {
+                    label: 'tag3',
+                    value: 'tag3'
+                },
+            ]
+        },
+        {
+            label: '接口类型',
+            value: 'interfaceType',
+            children: [
+                {
+                    label: 'tag4',
+                    value: 'tag4'
+                },
+                {
+                    label: 'tag5',
+                    value: 'tag5'
+                },
+                {
+                    label: 'tag6',
+                    value: 'tag6'
+                },
+            ]
+        },
+        {
+            label: '业务条线',
+            value: 'businessType',
+            children: [
+                {
+                    label: 'tag7',
+                    value: 'tag7'
+                },
+                {
+                    label: 'tag8',
+                    value: 'tag8'
+                },
+                {
+                    label: 'tag9',
+                    value: 'tag9'
+                },
+            ]
+        },
+    ];
+
+    const handleTest = () => {
+        console.log('test', form.getFieldValue('tags'));
+        console.log('test', form.getFieldValue('scriptName'));
+    }
+
     return (
         <div className="title-content">
-            <Form name={form}>
+            <Form form={form}>
                 <Row>
                     <Col span={6}>
                         <Form.Item labelCol={{ span: 6 }} wrapperCol={{ span: 14 }} label="脚本名称" name="scriptName"
@@ -34,25 +104,32 @@ const TitleContent = () => {
                         </Form.Item>
                     </Col>
 
-                    <Col span={6}>
-                        <Form.Item labelCol={{ span: 6 }} wrapperCol={{ span: 14 }} label="脚本描述" name="description">
-                            <Input placeholder="请输入脚本描述"/>
+                    <Col span={10}>
+                        <Form.Item labelCol={{ span: 3 }} wrapperCol={{ span: 21 }} label="标签" name="tags"
+                            // initialValue="测试脚本1"
+                        >
+                            <Cascader
+                                style={{ width: '100%' }}
+                                options={options}
+                                // onChange={onchange}
+                                multiple
+                                maxTagCount="responsive"
+                                showCheckedStrategy={Cascader.SHOW_CHILD}
+                            />
                         </Form.Item>
                     </Col>
                 </Row>
+                <Row>
+                    <Col span={18}>
+                        <Form.Item labelCol={{ span: 2 }} wrapperCol={{ span: 16 }} label="脚本描述" name="description">
+                            <Input placeholder="请输入脚本描述"/>
+                        </Form.Item>
+                    </Col>
 
-
-                {/*<Form.Item labelCol={{ span:6 }} wrapperCol={{span:14}} label="脚本名称" name="scriptName">*/}
-                {/*    <Input placeholder="请输入用例名称" />*/}
-                {/*</Form.Item>*/}
-
-                {/*<Form.Item labelCol={{ span:6 }} wrapperCol={{span:14}} label="所属项目" name="project">*/}
-                {/*    <Input placeholder="请输入所属项目" />*/}
-                {/*</Form.Item>*/}
-
-                {/*<Form.Item labelCol={{ span:6 }} wrapperCol={{span:14}} label="脚本描述" name="description">*/}
-                {/*    <Input placeholder="请输入脚本描述" />*/}
-                {/*</Form.Item>*/}
+                    <Col span={2}>
+                        <Button onClick={handleTest}>测试</Button>
+                    </Col>
+                </Row>
             </Form>
         </div>
     );

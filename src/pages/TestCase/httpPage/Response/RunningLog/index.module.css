@@ -1,0 +1,8 @@
+.log-style {
+    min-height: 100px;
+    max-height: 500px;
+    font-size: 18px;
+    overflow: auto;
+    white-space: pre-wrap; /* 保留空格和换行 */
+    word-wrap: break-word; /* 长单词换行 */
+}

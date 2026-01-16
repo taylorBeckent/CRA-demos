@@ -387,6 +387,11 @@ const EditableFormDataTable = ({ value = [], onChange }) => {
             key: '',
             value: '',
             tagList: [],
+            inputValue: '',
+            editingTag: {
+                index: null,
+                value: ''
+            },
             description: '',
             variableStatus: false
         };
